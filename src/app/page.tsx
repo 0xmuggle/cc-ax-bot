@@ -32,10 +32,10 @@ const Home: React.FC = () => {
         <div className="flex space-x-6 items-center">
             <h2 className="text-lg font-semibold">Dashboard</h2>
             <div className="font-mono text-sm">
-                <span>总: <span className="font-bold text-blue-600">{tokens.length}</span>条</span>
+                <span>总: <span className="font-bold text-blue-600">{filteredTokens.length}</span>条</span>
                 <span className="ml-4">高倍: <span className="font-bold text-yellow-600">{highMultiplierCount}</span></span>
                 <span className="ml-4">SOL: <span className="font-bold text-green-600">${solPrice.toFixed(2)}</span></span>
-                <span className="ml-4">最近更新: <span className="font-bold text-gray-700">{lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'N/A'}</span></span>
+                <span className="ml-4">最近更新: <span className="font-bold text-gray-700">{filteredTokens[0]?.surgeData.detectedAt ? new Date(filteredTokens[0].surgeData.detectedAt).toLocaleTimeString() : 'N/A'}</span></span>
             </div>
         </div>
         <button
