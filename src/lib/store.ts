@@ -60,15 +60,22 @@ export const useStore = create<AppState>()(
 
       tokens: [],
       addOrUpdateToken: (tokenUpdate) => {
+        // Destructure to omit protocolDetails and signature
+        const { protocolDetails, signature, tokenUri, pairAddress, tokenImage, pairSolAccount, pairTokenAccount, ...restOfTokenUpdate }: any = tokenUpdate;
+
         const tokens = [...get().tokens];
-        const existingIndex = tokens.findIndex(t => t.surgeData.tokenAddress === tokenUpdate.surgeData.tokenAddress);
+        // Use tokenAddress AND detectedAt for uniqueness
+        const existingIndex = tokens.findIndex(
+          t => t.surgeData.tokenAddress === restOfTokenUpdate.surgeData.tokenAddress &&
+               t.surgeData.detectedAt === restOfTokenUpdate.surgeData.detectedAt
+        );
 
         if (existingIndex > -1) {
           // Preserve purchase info if it exists
           const purchaseInfo = tokens[existingIndex].purchaseInfo;
-          tokens[existingIndex] = { ...tokenUpdate, purchaseInfo };
+          tokens[existingIndex] = { ...restOfTokenUpdate, purchaseInfo };
         } else {
-          tokens.unshift(tokenUpdate); // Add new tokens to the beginning
+          tokens.unshift(restOfTokenUpdate); // Add new tokens to the beginning
         }
 
         // Enforce max length

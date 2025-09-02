@@ -12,7 +12,7 @@ import { FilterState } from '@/lib/types';
 
 const Home: React.FC = () => {
   const { solPrice } = useStore();
-  const { openAxiomTab, isAxiomTabOpen } = useExtension();
+  const { isAxiomTabOpen } = useExtension();
 
   const { filteredTokens, highMultiplierCount } = useFilteredTokens();
 

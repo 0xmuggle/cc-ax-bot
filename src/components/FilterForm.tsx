@@ -139,7 +139,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
 
         <div className="flex items-center space-x-2 pt-6">
           <Switch id="historical-data" checked={formState.useHistoricalData} onCheckedChange={checked => handleLocalInputChange('useHistoricalData', checked)} />
-          <label htmlFor="historical-data" className="text-sm font-medium">使用历史数据</label>
+          <label htmlFor="historical-data" className="text-sm font-medium whitespace-pre">使用历史数据</label>
         </div>
 
       </div>

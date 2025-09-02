@@ -12,7 +12,7 @@ const formatNumber = (num: number) => {
   if (Math.abs(num) >= 1_000) {
     return `${(num / 1_000).toFixed(2)}K`;
   }
-  return num?.toFixed(2) ?? 'N/A';
+  return num ? `${(num / 1_000).toFixed(2)}K` : 'N/A';
 };
 
 const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
@@ -23,16 +23,16 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
       <table className="w-full text-sm text-left text-gray-600">
         <thead className="text-xs text-gray-700 capitalize bg-gray-50 sticky top-0 z-10">
           <tr>
-            <th scope="col" className="px-4 py-3">Token</th>
-            <th scope="col" className="px-4 py-3">涨幅</th>
-            <th scope="col" className="px-4 py-3">市值</th>
-            <th scope="col" className="px-4 py-3">交易量</th>
-            <th scope="col" className="px-4 py-3">流动性</th>
-            <th scope="col" className="px-4 py-3">捆绑</th>
-            <th scope="col" className="px-4 py-3">Dev持有</th>
-            <th scope="col" className="px-4 py-3">买卖比</th>
-            <th scope="col" className="px-4 py-3">平台</th>
-            <th scope="col" className="px-4 py-3">发现时间</th>
+            <th scope="col" className="px-2 py-4">Token</th>
+            <th scope="col" className="px-2 py-4">涨幅</th>
+            <th scope="col" className="px-2 py-4">市值</th>
+            <th scope="col" className="px-2 py-4">交易量</th>
+            <th scope="col" className="px-2 py-4">流动性</th>
+            <th scope="col" className="px-2 py-4">捆绑</th>
+            <th scope="col" className="px-2 py-4">Dev持有</th>
+            <th scope="col" className="px-2 py-4">买卖比</th>
+            <th scope="col" className="px-2 py-4">平台</th>
+            <th scope="col" className="px-2 py-4">发现时间</th>
           </tr>
         </thead>
         <tbody>
@@ -47,8 +47,8 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
             const rowClass = isHighMultiple ? 'bg-yellow-100' : 'bg-white';
 
             return (
-              <tr key={surgeData.tokenAddress} className={`${rowClass} border-b hover:bg-gray-50`}>
-                <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+              <tr key={surgeData.tokenAddress+surgeData.detectedAt} className={`${rowClass} border-b hover:border-amber-600`}>
+                <td className="px-2 py-1 font-medium text-gray-900 whitespace-nowrap">
                   <a 
                     href={`https://axiom.trade/t/${surgeData.tokenAddress}`} 
                     target="_blank" 
@@ -59,15 +59,15 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
                     <span className='text-xs text-gray-500'>{surgeData.tokenAddress.slice(0, 8)}</span>
                   </a>
                 </td>
-                <td className="px-4 py-3 font-mono text-green-500">{surgeData.priceChange ? `${surgeData.priceChange.toFixed(2)}x` : 'N/A'}</td>
-                <td className="px-4 py-3 font-mono">{`${formatNumber(surgedMarketCapUSD)}/${formatNumber(currentMarketCapUSD)}`}</td>
-                <td className="px-4 py-3 font-mono">{formatNumber(volumeUSD)}</td>
-                <td className="px-4 py-3 font-mono">{formatNumber(liquidityUSD)}</td>
-                <td className="px-4 py-3 font-mono">{(surgeData.bundlersHoldPercent).toFixed(1)}</td>
-                <td className="px-4 py-3 font-mono">{(surgeData.bundlersHoldPercent).toFixed(1)}</td>
-                <td className="px-4 py-3 font-mono">{buySellRatio}({surgeData.transactionCount})</td>
-                <td className="px-4 py-3">{surgeData.protocol}</td>
-                <td className="px-4 py-3 font-mono">{new Date(surgeData.detectedAt).toLocaleString()}</td>
+                <td className="px-2 py-1 font-mono text-green-500">{surgeData.priceChange ? `${surgeData.priceChange.toFixed(2)}x` : 'N/A'}</td>
+                <td className="px-2 py-1 font-mono">{`${formatNumber(surgedMarketCapUSD)}/${formatNumber(currentMarketCapUSD)}`}</td>
+                <td className="px-2 py-1 font-mono">{formatNumber(volumeUSD)}</td>
+                <td className="px-2 py-1 font-mono">{formatNumber(liquidityUSD)}</td>
+                <td className="px-2 py-1 font-mono">{(surgeData.bundlersHoldPercent).toFixed(1)}</td>
+                <td className="px-2 py-1 font-mono">{(surgeData.bundlersHoldPercent).toFixed(1)}</td>
+                <td className="px-2 py-1 font-mono">{buySellRatio}({surgeData.transactionCount})</td>
+                <td className="px-2 py-1">{surgeData.protocol}</td>
+                <td className="px-2 py-1 font-mono">{new Date(surgeData.detectedAt).toLocaleString()}</td>
               </tr>
             );
           })}

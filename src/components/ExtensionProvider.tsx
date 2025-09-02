@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useCallback, createContext, useContext, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { Token } from '@/lib/types';
+import { throttle } from '@/lib/utils';
 
 // Define the structure of the message from the content script
 interface AxiomMessage {
@@ -19,27 +20,6 @@ interface ExtensionContextType {
 const ExtensionContext = createContext<ExtensionContextType | null>(null);
 
 import { useNotificationEngine } from '@/lib/notificationEngine';
-
-// Add a throttle utility function
-const throttle = (func: Function, delay: number) => {
-  let timeoutId: NodeJS.Timeout | null = null;
-  let lastArgs: any[] | null = null;
-  let lastThis: any = null;
-
-  return function(this: any, ...args: any[]) {
-    lastArgs = args;
-    lastThis = this;
-
-    if (!timeoutId) {
-      timeoutId = setTimeout(() => {
-        func.apply(lastThis, lastArgs);
-        timeoutId = null;
-        lastArgs = null;
-        lastThis = null;
-      }, delay);
-    }
-  };
-};
 
 export function ExtensionProvider({ children }: { children: React.ReactNode }) {
   const { addOrUpdateToken, setSolPrice } = useStore();

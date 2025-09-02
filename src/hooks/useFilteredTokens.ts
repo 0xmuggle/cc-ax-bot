@@ -1,14 +1,40 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
-import { Token, FilterState } from '@/lib/types';
 
 export const useFilteredTokens = () => {
   const { tokens, solPrice, filters } = useStore();
 
-  const { filteredTokens, highMultiplierCount } = useMemo(() => {
-    const processedTokens = tokens.map(token => {
+  // --- Step 1: Debounce tokens and solPrice ---
+  const [debouncedTokens, setDebouncedTokens] = useState(tokens);
+  const [debouncedSolPrice, setDebouncedSolPrice] = useState(solPrice);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedTokens(tokens);
+    }, 200); // Debounce delay for tokens
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [tokens]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSolPrice(solPrice);
+    }, 200); // Debounce delay for solPrice
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [solPrice]);
+  // --- End Step 1 ---
+
+  // --- Step 2: Modify useMemo dependencies ---
+  const calculatedData = useMemo(() => {
+    // Use debouncedTokens and debouncedSolPrice here
+    const processedTokens = debouncedTokens.map(token => {
       const { surgeData, surgePrice } = token;
 
       // Calculate priceChange (涨幅) as multiplier
@@ -24,7 +50,7 @@ export const useFilteredTokens = () => {
       // Determine if high multiple (高倍)
       // Ensure filters.highMultiple is a positive number for comparison
       const isHighMultiple = (filters.highMultiple && filters.highMultiple > 0) ? 
-                             (surgePrice.maxSurgedPrice / surgePrice.currentPriceSol) >= filters.highMultiple : 
+                             priceChange >= filters.highMultiple : 
                              false;
 
       return {
@@ -38,7 +64,6 @@ export const useFilteredTokens = () => {
       };
     });
 
-    // Apply filters
     const filtered = processedTokens.filter(token => {
       const { surgeData } = token;
 
@@ -48,7 +73,7 @@ export const useFilteredTokens = () => {
       }
 
       // Market Cap filter
-      const marketCapUSD = surgeData.marketCapSol * solPrice;
+      const marketCapUSD = surgeData.marketCapSol * debouncedSolPrice; // Use debouncedSolPrice
       if (filters.marketCapMin && marketCapUSD < filters.marketCapMin) return false;
       if (filters.marketCapMax && marketCapUSD > filters.marketCapMax) return false;
 
@@ -56,7 +81,7 @@ export const useFilteredTokens = () => {
       if (filters.priceChange && token.surgeData.priceChange < filters.priceChange) return false;
 
       // Volume (K) filter (converted to USD)
-      const volumeUSD = surgeData.volumeSol * solPrice;
+      const volumeUSD = surgeData.volumeSol * debouncedSolPrice; // Use debouncedSolPrice
       if (filters.volumeKMin && volumeUSD < (filters.volumeKMin * 1000)) return false; // K means * 1000
       if (filters.volumeKMax && volumeUSD > (filters.volumeKMax * 1000)) return false;
 
@@ -88,18 +113,26 @@ export const useFilteredTokens = () => {
         if (!socialTerms.every(term => tokenSocials.some(ts => ts?.includes(term)))) return false;
       }
 
-      // Use Historical Data filter
-      if (filters.useHistoricalData && !(surgeData.timeTakenSeconds > 0 || surgeData.previousRank !== undefined)) {
-        return false;
-      }
-
       return true;
     });
 
     const highMultiplierCount = filtered.filter(token => token.isHighMultiple).length;
 
     return { filteredTokens: filtered, highMultiplierCount };
-  }, [tokens, solPrice, filters]);
+  }, [debouncedTokens, debouncedSolPrice, filters]); // New dependencies
 
-  return { filteredTokens, highMultiplierCount };
+  // --- Existing throttling for rendering output ---
+  const [throttledData, setThrottledData] = useState(calculatedData);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setThrottledData(calculatedData);
+    }, 400); // 400ms throttle for rendering
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [calculatedData]);
+
+  return throttledData;
 };
