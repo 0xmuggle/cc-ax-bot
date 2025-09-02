@@ -2,8 +2,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const openAppButton = document.getElementById('openApp');
   
   openAppButton.addEventListener('click', function() {
-    // The URL of the Next.js app
-    const appUrl = 'http://localhost:3000';
+    // T
+    // he URL of the Next.js app
+    const appUrl = 'http://192.168.1.21:3000/';
     
     // Check if a tab with the app URL is already open
     chrome.tabs.query({ url: appUrl }, function(tabs = []) {

@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Axiom Trader Assistant",
+  "version": "1.0",
+  "description": "Injects scripts to monitor and forward data from axiom.trade.",
+  "permissions": [
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://192.168.1.21:3000/*",
+    "https://axiom.trade/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://axiom.trade/discover"],
+      "js": ["content-script.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}
