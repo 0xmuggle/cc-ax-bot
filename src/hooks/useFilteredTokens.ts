@@ -8,8 +8,6 @@ export const useFilteredTokens = () => {
   const { tokens, solPrice, filters } = useStore();
 
   const { filteredTokens, highMultiplierCount } = useMemo(() => {
-    let currentHighMultiplierCount = 0;
-
     const processedTokens = tokens.map(token => {
       const { surgeData, surgePrice } = token;
 
@@ -28,10 +26,6 @@ export const useFilteredTokens = () => {
       const isHighMultiple = (filters.highMultiple && filters.highMultiple > 0) ? 
                              (surgePrice.maxSurgedPrice / surgePrice.currentPriceSol) >= filters.highMultiple : 
                              false;
-      
-      if (isHighMultiple) {
-        currentHighMultiplierCount++;
-      }
 
       return {
         ...token,
@@ -102,7 +96,9 @@ export const useFilteredTokens = () => {
       return true;
     });
 
-    return { filteredTokens: filtered, highMultiplierCount: currentHighMultiplierCount };
+    const highMultiplierCount = filtered.filter(token => token.isHighMultiple).length;
+
+    return { filteredTokens: filtered, highMultiplierCount };
   }, [tokens, solPrice, filters]);
 
   return { filteredTokens, highMultiplierCount };
