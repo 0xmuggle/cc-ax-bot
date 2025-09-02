@@ -59,9 +59,8 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
     setIsAxiomTabOpen(true);
   }, []);
 
-  useEffect(() => {
-    // Wrap handleMessage with throttle
-    const throttledHandleMessage = throttle((event: MessageEvent<AxiomMessage>) => {
+  const handleMessage = useCallback(
+    (event: MessageEvent<AxiomMessage>) => {
       // IMPORTANT: Check the origin for security if you deploy this publicly!
       // if (event.origin !== 'https://axiom.trade') return;
 
@@ -77,7 +76,8 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
         if (typeof payload.content === 'number') {
           setSolPrice(payload.content);
         }
-      } else if (room === 'surge-updates') {
+      }
+      else if (room === 'surge-updates') {
         if (payload.content && Array.isArray(payload.content.updates)) {
           payload.content.updates.forEach((update: any) => {
             const token: Token = update;
@@ -85,10 +85,22 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
           });
         }
       }
-    }, 400); // Throttle to 400ms
+    },
+    [addOrUpdateToken, setSolPrice]
+  );
 
+  const throttledHandleMessage = useRef(throttle(handleMessage, 400)).current;
+
+  useEffect(() => {
     window.addEventListener('message', throttledHandleMessage);
 
+    // Cleanup on component unmount
+    return () => {
+      window.removeEventListener('message', throttledHandleMessage);
+    };
+  }, [throttledHandleMessage]); // Dependency on throttledHandleMessage to ensure latest version is used
+
+  useEffect(() => {
     // Monitor the opened tab to update the UI
     const interval = setInterval(() => {
       if (axiomTabRef.current && axiomTabRef.current.closed) {
@@ -104,14 +116,13 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
 
     // Cleanup on component unmount
     return () => {
-      window.removeEventListener('message', throttledHandleMessage);
       clearInterval(interval);
       clearInterval(refreshInterval);
       if (axiomTabRef.current && !axiomTabRef.current.closed) {
         axiomTabRef.current.close();
       }
     };
-  }, [addOrUpdateToken, setSolPrice]);
+  }, []); // Empty dependency array to run only once
 
   return (
     <ExtensionContext.Provider value={{ openAxiomTab, isAxiomTabOpen }}>
