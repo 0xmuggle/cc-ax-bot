@@ -7,15 +7,13 @@ import { applyFiltersToToken } from '@/lib/filterUtils'; // Imported
 
 import { v4 as uuidv4 } from 'uuid';
 
-// Helper to generate a unique ID for history logs (already exists)
-const generateUniqueId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
 
 export const useNotificationEngine = () => {
   const {
     tokens,
     strategies,
     solPrice,
-    addOrUpdateToken,
     addHistoryLog,
     sentNotifications,
     addSentNotification,
@@ -105,7 +103,6 @@ export const useNotificationEngine = () => {
     tokens,
     strategies,
     solPrice,
-    addOrUpdateToken,
     addHistoryLog,
     sentNotifications,
     addSentNotification,

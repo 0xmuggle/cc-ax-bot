@@ -1,18 +1,12 @@
 
 export interface SurgeData {
   dexPaid: boolean;
-  pairAddress: string;
-  signature: string;
   tokenAddress: string;
   tokenName: string;
   tokenTicker: string;
   tokenImage: string;
-  tokenUri: string;
   tokenDecimals: number;
-  pairSolAccount: string;
-  pairTokenAccount: string;
   protocol: string;
-  protocolDetails: any; // Keeping this generic for now
   createdAt: string;
   website: string | null;
   twitter: string | null;
@@ -99,7 +93,6 @@ export interface HistoryLog {
   tokenTicker: string;
   strategyName: string;
   marketCapAtTrigger: number;
-  content: string;
 }
 
 // Represents the state of the main filter form
