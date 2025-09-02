@@ -11,8 +11,7 @@ import { useFilteredTokens } from '@/hooks/useFilteredTokens';
 import { FilterState } from '@/lib/types';
 
 const Home: React.FC = () => {
-  const { tokens, solPrice } = useStore();
-  const lastUpdated = tokens[0]?.surgeData.detectedAt;
+  const { solPrice } = useStore();
   const { openAxiomTab, isAxiomTabOpen } = useExtension();
 
   const { filteredTokens, highMultiplierCount } = useFilteredTokens();
@@ -38,15 +37,13 @@ const Home: React.FC = () => {
                 <span className="ml-4">最近更新: <span className="font-bold text-gray-700">{filteredTokens[0]?.surgeData.detectedAt ? new Date(filteredTokens[0].surgeData.detectedAt).toLocaleTimeString() : 'N/A'}</span></span>
             </div>
         </div>
-        <button
-          onClick={openAxiomTab}
-          className={`px-5 py-2 text-sm text-white font-bold rounded-lg shadow-md transition-colors ${
+        <div className={`px-5 py-2 text-sm text-white font-bold rounded-lg shadow-md ${
             isAxiomTabOpen 
-            ? 'bg-green-500 hover:bg-green-600' 
-            : 'bg-blue-500 hover:bg-blue-600'
+            ? 'bg-green-500' 
+            : 'bg-gray-500' // Use a neutral color when not open, as it's not clickable
           }`}>
-          {isAxiomTabOpen ? 'Axiom Tab is Open' : 'Connect to Axiom'}
-        </button>
+          {isAxiomTabOpen ? 'Axiom Tab is Open' : 'Axiom Tab Closed'}
+        </div>
       </div>
 
       {/* Top Section: Strategies and Filters */}

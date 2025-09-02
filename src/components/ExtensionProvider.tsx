@@ -49,12 +49,12 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
   // Activate the notification engine
   useNotificationEngine();
 
+  const AXIOM_WINDOW_NAME = 'AXIOM_TRADER_WINDOW';
   const openAxiomTab = useCallback(() => {
     if (axiomTabRef.current && !axiomTabRef.current.closed) {
-      axiomTabRef.current.focus();
       return;
     }
-    const newTab = window.open('https://axiom.trade/discover', '_blank');
+    const newTab = window.open('https://axiom.trade/discover', AXIOM_WINDOW_NAME, 'width=40,height=40,popup=yes');
     axiomTabRef.current = newTab;
     setIsAxiomTabOpen(true);
   }, []);
@@ -101,11 +101,15 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
   }, [throttledHandleMessage]); // Dependency on throttledHandleMessage to ensure latest version is used
 
   useEffect(() => {
-    // Monitor the opened tab to update the UI
+    // Auto-open Axiom tab on component mount
+    openAxiomTab();
+
+    // Monitor the opened tab to update the UI and auto-reopen
     const interval = setInterval(() => {
       if (axiomTabRef.current && axiomTabRef.current.closed) {
         setIsAxiomTabOpen(false);
         axiomTabRef.current = null;
+        openAxiomTab(); // Auto-reopen
       }
     }, 1000);
 
@@ -118,11 +122,9 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
     return () => {
       clearInterval(interval);
       clearInterval(refreshInterval);
-      if (axiomTabRef.current && !axiomTabRef.current.closed) {
-        axiomTabRef.current.close();
-      }
+      // Removed axiomTabRef.current.close(); - plugin will handle this
     };
-  }, []); // Empty dependency array to run only once
+  }, [openAxiomTab]); // Dependency on openAxiomTab for auto-open and auto-reopen
 
   return (
     <ExtensionContext.Provider value={{ openAxiomTab, isAxiomTabOpen }}>
