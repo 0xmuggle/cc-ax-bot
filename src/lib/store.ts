@@ -10,7 +10,7 @@ interface AppState {
   setSolPrice: (price: number) => void;
 
   tokens: Token[];
-  addOrUpdateToken: (token: Token) => void;
+  addOrUpdateTokens: (tokens: Token[]) => void;
 
   strategies: Strategy[];
   addStrategy: (strategy: Strategy) => void;
@@ -59,31 +59,51 @@ export const useStore = create<AppState>()(
       setSolPrice: (price) => set({ solPrice: price }),
 
       tokens: [],
-      addOrUpdateToken: (tokenUpdate) => {
-        // Destructure to omit protocolDetails and signature
-        const { protocolDetails, signature, tokenUri, pairAddress, tokenImage, pairSolAccount, pairTokenAccount, ...restOfTokenUpdate }: any = tokenUpdate;
-
-        const tokens = [...get().tokens];
-        // Use tokenAddress AND detectedAt for uniqueness
-        const existingIndex = tokens.findIndex(
-          t => t.surgeData.tokenAddress === restOfTokenUpdate.surgeData.tokenAddress &&
-               t.surgeData.detectedAt === restOfTokenUpdate.surgeData.detectedAt
-        );
-
-        if (existingIndex > -1) {
-          // Preserve purchase info if it exists
-          const purchaseInfo = tokens[existingIndex].purchaseInfo;
-          tokens[existingIndex] = { ...restOfTokenUpdate, purchaseInfo };
-        } else {
-          tokens.unshift(restOfTokenUpdate); // Add new tokens to the beginning
-        }
+      addOrUpdateTokens: (updates: Token[]) => {
+        let nextTokens = [...get().tokens];
+        updates.forEach((update: Token) => {
+          // Destructure to omit protocolDetails and signature
+          const { protocolDetails, signature, tokenUri, pairAddress, tokenImage, pairSolAccount, pairTokenAccount, ...restOfTokenUpdate }: any = update;
+          
+          // Use tokenAddress AND detectedAt for uniqueness
+          const existingIndex = nextTokens.findIndex(
+            t => t.surgeData.tokenAddress === restOfTokenUpdate.surgeData.tokenAddress &&
+                t.surgeData.detectedAt === restOfTokenUpdate.surgeData.detectedAt
+          );
+         
+          if (existingIndex > -1) {
+            let update: any = {};
+            const { priceAt5M, priceAt10M, priceAt15M, priceAt30M, priceAt3M } = nextTokens[existingIndex];
+            
+            // 检查是否更新5分钟市值
+            const diff = (Date.now() - new Date(restOfTokenUpdate.surgeData.detectedAt).getTime()) / 1000 / 60;
+            if(diff < 5 && diff > 3 && !priceAt3M) {
+              update.priceAt3M = restOfTokenUpdate.surgePrice.currentPriceSol;
+            } else if(diff < 10 && diff > 5 && !priceAt5M) {
+              update.priceAt5M = restOfTokenUpdate.surgePrice.currentPriceSol;
+            } else if(diff < 15 && diff > 10 && !priceAt10M) {
+              update.priceAt10M = restOfTokenUpdate.surgePrice.currentPriceSol;
+            } else if(diff < 30 && diff > 15 && !priceAt15M) {
+              update.priceAt15M = restOfTokenUpdate.surgePrice.currentPriceSol;
+            }else if(diff > 30 && !priceAt30M) {
+              update.priceAt30M = restOfTokenUpdate.surgePrice.currentPriceSol;
+            } 
+            nextTokens[existingIndex] = {
+              ...update,
+              ...nextTokens[existingIndex],
+              ...restOfTokenUpdate,
+            };
+          } else {
+            nextTokens.unshift(restOfTokenUpdate);
+          }
+        });
 
         // Enforce max length
-        if (tokens.length > MAX_TOKENS) {
-          tokens.pop(); // Remove the oldest
+        if (nextTokens.length >= MAX_TOKENS) {
+          nextTokens = nextTokens.slice(0, MAX_TOKENS * 0.8);
         }
         
-        set({ tokens });
+        set({ tokens: nextTokens.sort((a: any, b: any) => new Date(b.surgeData.detectedAt).getTime() - new Date(a.surgeData.detectedAt).getTime()) });
       },
 
       strategies: [],

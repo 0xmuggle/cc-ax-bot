@@ -27,26 +27,29 @@ const Home: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Top Info Bar */}
-      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg shadow-sm flex justify-between items-center">
-        <div className="flex space-x-6 items-center">
-            <h2 className="text-lg font-semibold">Dashboard</h2>
-            <div className="font-mono text-sm">
+      {/* Top Section: Strategies and Filters */}
+      <div className="p-3 border border-gray-200 rounded-lg shadow-sm bg-gray-50">
+        <div className="space-y-4">
+          <div className='flex justify-between items-center'>
+            <div className='flex items-center space-x-8'>
+              <h2 className="text-lg font-semibold">Dashboard</h2>
+              <div className="font-mono text-sm flex space-x-6">
                 <span>总: <span className="font-bold text-blue-600">{filteredTokens.length}</span>条</span>
-                <span className="ml-4">高倍: <span className="font-bold text-yellow-600">{highMultiplierCount}</span></span>
-                <span className="ml-4">SOL: <span className="font-bold text-green-600">${solPrice.toFixed(2)}</span></span>
-                <span className="ml-4">最近更新: <span className="font-bold text-gray-700">{filteredTokens[0]?.surgeData.detectedAt ? new Date(filteredTokens[0].surgeData.detectedAt).toLocaleTimeString() : 'N/A'}</span></span>
+                <span>高倍: <span className="font-bold text-yellow-600">{highMultiplierCount}</span></span>
+                <span>SOL: <span className="font-bold text-green-600">${solPrice.toFixed(2)}</span></span>
+                <span>最近更新: <span className="font-bold text-gray-700">{filteredTokens[0]?.surgeData.detectedAt ? new Date(filteredTokens[0].surgeData.detectedAt).toLocaleString() : 'N/A'}</span></span>
+              </div>
             </div>
-        </div>
-        <div className={`px-5 py-2 text-sm text-white font-bold rounded-lg shadow-md ${
-            isAxiomTabOpen 
-            ? 'bg-green-500' 
-            : 'bg-gray-500' // Use a neutral color when not open, as it's not clickable
-          }`}>
-          {isAxiomTabOpen ? 'Axiom Tab is Open' : 'Axiom Tab Closed'}
+             <div className={`px-5 py-2 text-sm text-white font-bold rounded-lg shadow-md ${
+              isAxiomTabOpen 
+              ? 'bg-green-500' 
+              : 'bg-gray-500' // Use a neutral color when not open, as it's not clickable
+            }`}>
+              {isAxiomTabOpen ? 'Axiom Tab is Open' : 'Axiom Tab Closed'}
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Top Section: Strategies and Filters */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <div className="xl:col-span-1">
           <StrategyManager />
@@ -55,12 +58,10 @@ const Home: React.FC = () => {
            <FilterForm onSaveStrategy={handleOpenSaveModal} />
         </div>
       </div>
-
       {/* Bottom Section: Token Table */}
       <div className="w-full">
         <TokenTable tokens={filteredTokens} />
       </div>
-
       {/* Modal for Saving Strategy */}
       <SaveStrategyModal 
         isOpen={isModalOpen} 

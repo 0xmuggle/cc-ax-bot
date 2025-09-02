@@ -36,10 +36,8 @@ export const useNotificationEngine = () => {
     tokens.forEach(token => {
       const tokenAddress = token.surgeData.tokenAddress;
 
-      // Skip if already marked as purchased (meaning notification was sent and acted upon)
-      if (token.purchaseInfo?.purchased) {
-        return;
-      }
+      // The "send lock" (sentNotifications) is now the primary mechanism to prevent duplicate notifications.
+      // No need to check token.purchaseInfo?.purchased here.
 
       let bestMatchingStrategy: Strategy | null = null;
 
@@ -81,17 +79,7 @@ export const useNotificationEngine = () => {
               console.log(`Telegram notification sent for ${token.surgeData.tokenTicker} via ${strategy.name}`);
 
               // --- Action: Mark Token as Purchased & Record History ---
-              // Mark token as purchased
-              const updatedToken = {
-                ...token,
-                purchaseInfo: {
-                  purchased: true,
-                  marketCap: currentMarketCapUSD,
-                },
-              };
-              addOrUpdateToken(updatedToken); // Update the token in the store
-
-              // Record history log
+              // --- Action: Record History ---
               addHistoryLog({
                 id: uuidv4(), // Use uuidv4
                 timestamp: new Date().toISOString(),

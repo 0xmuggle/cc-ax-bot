@@ -4,20 +4,20 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
   const { surgeData, surgePrice } = token;
 
   // New Time-based Condition
-  const currentTime = Date.now();
-  const detectedAtTime = new Date(surgeData.detectedAt).getTime();
+  // const currentTime = Date.now();
+  // const detectedAtTime = new Date(surgeData.detectedAt).getTime();
 
-  if (filters.useHistoricalData) {
-    // If useHistoricalData is true, detectedAt must be within the last 30 minutes
-    if ((currentTime - detectedAtTime) > 30 * 60 * 1000) {
-      return false;
-    }
-  } else {
-    // If useHistoricalData is false, detectedAt must be within the last 5 seconds
-    if ((currentTime - detectedAtTime) > 5 * 1000) {
-      return false;
-    }
-  }
+  // if (filters.useHistoricalData) {
+  //   // If useHistoricalData is true, detectedAt must be within the last 30 minutes
+  //   if ((currentTime - detectedAtTime) > 30 * 60 * 1000) {
+  //     return false;
+  //   }
+  // } else {
+  //   // If useHistoricalData is false, detectedAt must be within the last 5 seconds
+  //   if ((currentTime - detectedAtTime) > 5 * 1000) {
+  //     return false;
+  //   }
+  // }
 
   // Ticker filter
   if (filters.ticker && !surgeData.tokenTicker.toLowerCase().includes(filters.ticker.toLowerCase())) {
@@ -31,7 +31,8 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
 
   // Price Change (涨幅) filter
   // Note: priceChange is calculated in useFilteredTokens, ensure it's available on the token
-  if (filters.priceChange && (surgeData.priceChange ?? 0) < filters.priceChange) return false;
+  const priceChange = surgePrice.maxSurgedPrice / surgeData.surgedPrice;
+  if (filters.priceChange && (priceChange ?? 0) < filters.priceChange) return false;
 
   // Volume (K) filter (converted to USD)
   const volumeUSD = surgeData.volumeSol * solPrice;
@@ -64,15 +65,6 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
     ].filter(Boolean).map(s => s?.toLowerCase());
 
     if (!socialTerms.every(term => tokenSocials.some(ts => ts?.includes(term)))) return false;
-  }
-
-  // High Multiple filter (already calculated as isHighMultiple on token, but strategy filter needs to be applied)
-  // This assumes filters.highMultiple is the threshold for the strategy
-  if (filters.highMultiple && filters.highMultiple > 0) {
-    const currentPriceChange = (surgePrice.maxSurgedPrice / surgePrice.currentPriceSol);
-    if (currentPriceChange < filters.highMultiple) {
-      return false;
-    }
   }
 
   return true;

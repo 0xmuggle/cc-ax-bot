@@ -54,7 +54,6 @@ export interface SurgeData {
   surgedPrice: number;
   // New fields for table display
   priceChange?: number; // 涨幅
-  socialLinks?: string[]; // 社交
 }
 
 export interface SurgePrice {
@@ -65,13 +64,14 @@ export interface SurgePrice {
 export interface Token {
   surgeData: SurgeData;
   surgePrice: SurgePrice;
-  // Info added by our app
-  purchaseInfo?: {
-    purchased: boolean;
-    marketCap: number;
-  };
   // For highlighting
   isHighMultiple?: boolean;
+  // debug
+  priceAt3M?: number;
+  priceAt5M?: number;
+  priceAt10M?: number;
+  priceAt15M?: number;
+  priceAt30M?: number;
 }
 
 export interface Strategy {

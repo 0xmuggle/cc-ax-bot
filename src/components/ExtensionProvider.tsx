@@ -22,7 +22,7 @@ const ExtensionContext = createContext<ExtensionContextType | null>(null);
 import { useNotificationEngine } from '@/lib/notificationEngine';
 
 export function ExtensionProvider({ children }: { children: React.ReactNode }) {
-  const { addOrUpdateToken, setSolPrice } = useStore();
+  const { addOrUpdateTokens, setSolPrice } = useStore();
   const axiomTabRef = useRef<Window | null>(null);
   const [isAxiomTabOpen, setIsAxiomTabOpen] = useState(false);
 
@@ -53,23 +53,21 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
       }
       const room = payload.room;
       if (room === 'sol_price') {
+        console.log('sol', payload.content);
         if (typeof payload.content === 'number') {
           setSolPrice(payload.content);
         }
       }
       else if (room === 'surge-updates') {
         if (payload.content && Array.isArray(payload.content.updates)) {
-          payload.content.updates.forEach((update: any) => {
-            const token: Token = update;
-            addOrUpdateToken(token);
-          });
+          addOrUpdateTokens(payload.content.updates);
         }
       }
     },
-    [addOrUpdateToken, setSolPrice]
+    [addOrUpdateTokens, setSolPrice]
   );
 
-  const throttledHandleMessage = useRef(throttle(handleMessage, 400)).current;
+  const throttledHandleMessage = useRef(throttle(handleMessage, 50)).current;
 
   useEffect(() => {
     window.addEventListener('message', throttledHandleMessage);

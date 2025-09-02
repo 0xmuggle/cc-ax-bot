@@ -16,7 +16,7 @@ const StrategyManager: React.FC = () => {
   const handleFilters = (filters: any) => {
     setFilters({
       ...filters,
-       marketCapMin: parseRangeInput(filters.marketCap, 1000)[0],
+      marketCapMin: parseRangeInput(filters.marketCap, 1000)[0],
       marketCapMax: parseRangeInput(filters.marketCap, 1000)[1],
       volumeKMin: parseRangeInput(filters.volumeK, 1)[0],
       volumeKMax: parseRangeInput(filters.volumeK, 1)[1],

@@ -125,7 +125,6 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
   return (
     <div className="p-4 bg-card border rounded-lg shadow-sm">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-start">
-        
         {/* --- Input Fields --- */}
         <InputField label="Token Ticker" value={formState.ticker || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('ticker', e.target.value)} />
         <InputField label="市值(K)" placeholder="10 or 10,20" value={formState.marketCap} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('marketCap', e.target.value)} />
@@ -155,7 +154,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
 // Helper component for consistent input fields
 const InputField: React.FC<{ label: string } & React.InputHTMLAttributes<HTMLInputElement>> = ({ label, ...props }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <label className="block text-xs font-medium text-gray-800 mb-1">{label}</label>
     <input {...props} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm" />
   </div>
 );
