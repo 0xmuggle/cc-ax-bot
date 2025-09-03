@@ -54,7 +54,6 @@ const StrategyManager: React.FC = () => {
                   <Switch 
                     checked={strategy.enabled}
                     onCheckedChange={(enabled) => updateStrategy({ ...strategy, enabled })}
-                    color="green"
                   />
                 </td>
                 <td className="px-4 py-3 font-medium">{strategy.name}</td>

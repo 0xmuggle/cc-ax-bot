@@ -1,23 +1,25 @@
 import { Token, FilterState } from './types';
 
-export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice: number): boolean => {
+export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice: number, isCheckTime: boolean = false): boolean => {
   const { surgeData, surgePrice } = token;
 
-  // New Time-based Condition
-  // const currentTime = Date.now();
-  // const detectedAtTime = new Date(surgeData.detectedAt).getTime();
+  if(isCheckTime) {
+    // New Time-based Condition
+    const currentTime = Date.now();
+    const detectedAtTime = new Date(surgeData.detectedAt).getTime();
 
-  // if (filters.useHistoricalData) {
-  //   // If useHistoricalData is true, detectedAt must be within the last 30 minutes
-  //   if ((currentTime - detectedAtTime) > 30 * 60 * 1000) {
-  //     return false;
-  //   }
-  // } else {
-  //   // If useHistoricalData is false, detectedAt must be within the last 5 seconds
-  //   if ((currentTime - detectedAtTime) > 5 * 1000) {
-  //     return false;
-  //   }
-  // }
+    if (filters.useHistoricalData) {
+      // If useHistoricalData is true, detectedAt must be within the last 30 minutes
+      if ((currentTime - detectedAtTime) > 30 * 60 * 1000) {
+        return false;
+      }
+    } else {
+      // If useHistoricalData is false, detectedAt must be within the last 5 seconds
+      if ((currentTime - detectedAtTime) > 5 * 1000) {
+        return false;
+      }
+    }
+  }
 
   // Ticker filter
   if (filters.ticker && !surgeData.tokenTicker.toLowerCase().includes(filters.ticker.toLowerCase())) {
@@ -28,6 +30,30 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
   const marketCapUSD = surgeData.marketCapSol * solPrice;
   if (filters.marketCapMin && marketCapUSD < filters.marketCapMin) return false;
   if (filters.marketCapMax && marketCapUSD > filters.marketCapMax) return false;
+
+  // New Market Cap filters for different time points
+  const mcAt3m = token.priceAt3M ? token.priceAt3M * surgeData.supply * solPrice : 0;
+  if (filters.marketCap3MMin && (token.priceAt3M && mcAt3m < filters.marketCap3MMin || !mcAt3m)) return false;
+  if (filters.marketCap3MMax && (token.priceAt3M && mcAt3m > filters.marketCap3MMax || !mcAt3m)) return false;
+
+  const mcAt5m = token.priceAt5M ? token.priceAt5M * surgeData.supply * solPrice : 0;
+  if (filters.marketCap5MMin && (token.priceAt5M && mcAt5m < filters.marketCap5MMin || !mcAt5m)) return false;
+  if (filters.marketCap5MMax && (token.priceAt5M && mcAt5m > filters.marketCap5MMax || !mcAt5m)) return false;
+
+  const mcAt10m = token.priceAt10M ? token.priceAt10M * surgeData.supply * solPrice : 0;
+  if (filters.marketCap10MMin && (token.priceAt10M && mcAt10m < filters.marketCap10MMin || !mcAt10m)) return false;
+  if (filters.marketCap10MMax && (token.priceAt10M && mcAt10m > filters.marketCap10MMax || !mcAt10m)) return false;
+
+  const mcAt15m = token.priceAt15M ? token.priceAt15M * surgeData.supply * solPrice : 0;
+  if (filters.marketCap15MMin && (token.priceAt15M && mcAt15m < filters.marketCap15MMin || !mcAt15m)) return false;
+  if (filters.marketCap15MMax && (token.priceAt15M && mcAt15m > filters.marketCap15MMax || !mcAt15m)) return false;
+
+  const mcAt30m = token.priceAt30M ? token.priceAt30M * surgeData.supply * solPrice : 0;
+  if (filters.marketCap30MMin && (token.priceAt30M && mcAt30m < filters.marketCap30MMin || !mcAt30m)) return false;
+  if (filters.marketCap30MMax && (token.priceAt30M && mcAt30m > filters.marketCap30MMax || !mcAt30m)) return false;
+
+  // dexPaid filter
+  if (filters.dexPaid !== undefined && surgeData.dexPaid !== filters.dexPaid) return false;
 
   // Price Change (涨幅) filter
   // Note: priceChange is calculated in useFilteredTokens, ensure it's available on the token
@@ -68,4 +94,14 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
   }
 
   return true;
+};
+
+export const formatNumber = (num: number) => {
+  if (Math.abs(num) >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(2)}M`;
+  }
+  if (Math.abs(num) >= 1_000) {
+    return `${(num / 1_000).toFixed(2)}K`;
+  }
+  return num ? `${(num / 1_000).toFixed(2)}K` : 'N/A';
 };

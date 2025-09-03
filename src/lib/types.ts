@@ -48,6 +48,7 @@ export interface SurgeData {
   surgedPrice: number;
   // New fields for table display
   priceChange?: number; // 涨幅
+  
 }
 
 export interface SurgePrice {
@@ -66,6 +67,9 @@ export interface Token {
   priceAt10M?: number;
   priceAt15M?: number;
   priceAt30M?: number;
+  buyPrice: number; // 买入价格
+  position: number; // 仓位比例
+  botId: string;
 }
 
 export interface Strategy {
@@ -111,4 +115,15 @@ export interface FilterState {
   bundledMax?: number;
   social?: string; // 社交
   useHistoricalData?: boolean; // 使用历史数据
+  marketCap3MMin?: number;
+  marketCap3MMax?: number;
+  marketCap5MMin?: number;
+  marketCap5MMax?: number;
+  marketCap10MMin?: number;
+  marketCap10MMax?: number;
+  marketCap15MMin?: number;
+  marketCap15MMax?: number;
+  marketCap30MMin?: number;
+  marketCap30MMax?: number;
+  dexPaid?: boolean;
 }

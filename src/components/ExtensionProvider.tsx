@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useCallback, createContext, useContext, useState } from 'react';
 import { useStore } from '@/lib/store';
-import { Token } from '@/lib/types';
 import { throttle } from '@/lib/utils';
 
 // Define the structure of the message from the content script
@@ -19,15 +18,10 @@ interface ExtensionContextType {
 
 const ExtensionContext = createContext<ExtensionContextType | null>(null);
 
-import { useNotificationEngine } from '@/lib/notificationEngine';
-
 export function ExtensionProvider({ children }: { children: React.ReactNode }) {
   const { addOrUpdateTokens, setSolPrice } = useStore();
   const axiomTabRef = useRef<Window | null>(null);
   const [isAxiomTabOpen, setIsAxiomTabOpen] = useState(false);
-
-  // Activate the notification engine
-  useNotificationEngine();
 
   const AXIOM_WINDOW_NAME = 'AXIOM_TRADER_WINDOW';
   const openAxiomTab = useCallback(() => {
@@ -53,7 +47,6 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
       }
       const room = payload.room;
       if (room === 'sol_price') {
-        console.log('sol', payload.content);
         if (typeof payload.content === 'number') {
           setSolPrice(payload.content);
         }
@@ -91,15 +84,9 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
       }
     }, 1000);
 
-    // Auto-refresh every 30 minutes
-    const refreshInterval = setInterval(() => {
-      window.location.reload();
-    }, 30 * 60 * 1000);
-
     // Cleanup on component unmount
     return () => {
       clearInterval(interval);
-      clearInterval(refreshInterval);
       // Removed axiomTabRef.current.close(); - plugin will handle this
     };
   }, [openAxiomTab]); // Dependency on openAxiomTab for auto-open and auto-reopen

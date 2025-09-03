@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useStore } from '@/lib/store';
-import { HistoryLog } from '@/lib/types';
+import { formatNumber } from '@/lib/filterUtils';
 
 const HistoryPage: React.FC = () => {
   const history = useStore((state) => state.history);
@@ -20,8 +20,8 @@ const HistoryPage: React.FC = () => {
                 <p className="font-bold text-gray-800">{log.tokenTicker}</p>
                 <p className="text-xs font-mono text-gray-500">{new Date(log.timestamp).toLocaleString()}</p>
               </div>
-              <p className="text-sm text-gray-600">Matched strategy: <span className="font-semibold">{log.strategyName}</span></p>
-              <p className="text-sm text-gray-600">Market Cap at trigger: <span className="font-mono">${log.marketCapAtTrigger.toFixed(2)}</span></p>
+              <p className="text-sm text-gray-600">命中策略: <span className="font-semibold">{log.strategyName}</span></p>
+              <p className="text-sm text-gray-600">市值: <span className="font-mono">${formatNumber(log.marketCapAtTrigger)}</span></p>
               <p className="text-xs text-gray-500 font-mono mt-2">CA: {log.tokenAddress}</p>
             </div>
           ))

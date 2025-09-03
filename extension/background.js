@@ -1,4 +1,3 @@
-// background.js
 
 const AXIOM_WINDOW_NAME = 'AXIOM_TRADER_WINDOW';
 const DASHBOARD_URL_PATTERN = 'http://192.168.1.21:3000/'; // Adjust as per your dashboard URL
@@ -49,6 +48,25 @@ setInterval(async () => {
     }
   }
 }, 5000); // Check every 5 seconds
+
+
+// Function to refresh the dashboard tab
+function refreshDashboard() {
+  chrome.tabs.query({ url: `${DASHBOARD_URL_PATTERN}*` }, (tabs) => {
+    if (tabs.length > 0) {
+      chrome.tabs.reload(tabs[0].id);
+      console.log('Dashboard refreshed');
+    }
+  });
+}
+// Auto-refresh every 30 minutes
+setInterval(refreshDashboard, 30 * 60 * 1000);
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'refreshDashboard') {
+    refreshDashboard();
+  }
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("Axiom Trader Assistant extension installed.");

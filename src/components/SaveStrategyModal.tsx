@@ -83,7 +83,7 @@ export const SaveStrategyModal: React.FC<SaveStrategyModalProps> = ({ isOpen, on
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="amount" className="text-right">金额</label>
-            <input id="amount" type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="col-span-3 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" />
+            <input step={0.1} id="amount" type="number" value={amount} onChange={e => setAmount(Number(e.target.value))} className="col-span-3 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="bot" className="text-right">Bot</label>

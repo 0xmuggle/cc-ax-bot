@@ -2,24 +2,14 @@
 
 import React from 'react';
 import { useStore } from '@/lib/store';
-import { EnrichedToken } from '@/hooks/useTokensWithPurchaseInfo';
+import { Token } from '@/lib/types';
+import { formatNumber } from '@/lib/filterUtils';
 
-// Helper to format large numbers into K (thousands) or M (millions)
-const formatNumber = (num: number) => {
-  if (Math.abs(num) >= 1_000_000) {
-    return `${(num / 1_000_000).toFixed(2)}M`;
-  }
-  if (Math.abs(num) >= 1_000) {
-    return `${(num / 1_000).toFixed(2)}K`;
-  }
-  return num ? `${(num / 1_000).toFixed(2)}K` : 'N/A';
-};
-
-const TokenTable: React.FC<{ tokens: EnrichedToken[] }> = ({ tokens }) => {
+const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
   const solPrice = useStore((state) => state.solPrice);
 
   return (
-    <div className="relative w-full max-h-[70vh] overflow-y-auto border rounded-lg shadow-sm">
+    <div className="relative w-full max-h-[90vh] overflow-y-auto border rounded-lg shadow-sm">
       <table className="w-full text-sm text-left text-gray-600">
         <thead className="text-xs text-gray-700 capitalize bg-gray-50 sticky top-0 z-10">
           <tr>
@@ -34,12 +24,13 @@ const TokenTable: React.FC<{ tokens: EnrichedToken[] }> = ({ tokens }) => {
             <th scope="col" className="px-2 py-4">买卖比</th>
             <th scope="col" className="px-2 py-4">平台</th>
             <th scope="col" className="px-2 py-4">付费</th>
+            <th scope="col" className="px-2 py-4">买入</th>
             <th scope="col" className="px-2 py-4">发现时间</th>
           </tr>
         </thead>
         <tbody>
           {tokens.map((token) => {
-            const { surgeData, surgePrice, priceAt5M, priceAt10M, priceAt15M, priceAt30M, priceAt3M, isHighMultiple }: any = token;
+            const { surgeData, surgePrice, priceAt5M, priceAt10M, priceAt15M, priceAt30M, priceAt3M, buyPrice, isHighMultiple }: any = token;
             const currentMarketCapUSD = surgePrice.currentPriceSol * surgeData.supply * solPrice;
             const surgedMarketCapUSD = surgeData.surgedPrice * surgeData.supply * solPrice;
             const priceAt3mMc = priceAt3M ? priceAt3M * surgeData.supply * solPrice : 0;
@@ -87,6 +78,7 @@ const TokenTable: React.FC<{ tokens: EnrichedToken[] }> = ({ tokens }) => {
                 <td className="px-2 py-1 font-mono">{buySellRatio}({surgeData.transactionCount})</td>
                 <td className="px-2 py-1">{surgeData.protocol}</td>
                 <td className="px-2 py-1">{surgeData.dexPaid ? <span className='text-green-600'>是</span> : "否"}</td>
+                <td className="px-2 py-1">{buyPrice ? <span className='text-green-600'>是<span className='text-xs'>({formatNumber(buyPrice * surgeData.supply * solPrice)})</span></span> : "否"}</td>
                 <td className="px-2 py-1 font-mono">
                   {new Date(surgeData.detectedAt).toLocaleString()}
                 </td>

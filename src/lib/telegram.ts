@@ -11,29 +11,28 @@
  */
 export async function sendToTelegram(content: string, apiKey: string, chatId: string): Promise<boolean> {
   let reply = 0;
-  const url = `https://api.telegram.org/bot${apiKey}/sendMessage`;
+  const internalApiUrl = '/api/telegram/send-message'; // Use internal API route
 
   const send = async (): Promise<boolean> => {
     reply++;
     try {
-      const response = await fetch(url, {
+      const response = await fetch(internalApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          chat_id: chatId,
-          text: content,
-          parse_mode: 'HTML',
-          disable_web_page_preview: true
+          content, // Pass content
+          apiKey,  // Pass apiKey
+          chatId   // Pass chatId
         })
       });
 
       const data = await response.json();
-      console.log('Sent to Telegram:', data);
+      console.log('Sent to Telegram via proxy:', data);
       return data.ok === true;
     } catch (error) {
-      console.error('Failed to send message to Telegram:', error);
+      console.error('Failed to send message to Telegram via proxy:', error);
       if (reply < 3) {
         // Wait for a second before retrying
         await new Promise(resolve => setTimeout(resolve, 1000));
