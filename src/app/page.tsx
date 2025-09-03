@@ -74,6 +74,9 @@ const Home: React.FC = () => {
               {isAxiomTabOpen ? 'Axiom Tab is Open' : 'Axiom Tab Closed'}
             </div>
             <Button variant="destructive" size="sm" onClick={() => useStore.getState().clearTokens()}>清除Tokens</Button>
+            <Button style={{ display: 'none' }} size="sm" variant="outline" asChild>
+              <a href="/test.zip" download>下载插件</a>
+            </Button>
             </div>
           </div>
         </div>

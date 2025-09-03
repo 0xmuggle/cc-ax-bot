@@ -72,9 +72,9 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
                 </td>
                 <td className="px-2 py-1 font-mono">{formatNumber(volumeUSD)}</td>
                 <td className="px-2 py-1 font-mono">{formatNumber(liquidityUSD)}</td>
-                <td className="px-2 py-1 font-mono">{(surgeData.bundlersHoldPercent).toFixed(1)}</td>
-                <td className="px-2 py-1 font-mono">{(surgeData.devHoldsPercent).toFixed(1)}</td>
-                <td className="px-2 py-1 font-mono">{(surgeData.top10Holders).toFixed(1)}</td>
+                <td className="px-2 py-1 font-mono">{surgeData.bundlersHoldPercent?.toFixed(1)}</td>
+                <td className="px-2 py-1 font-mono">{surgeData.devHoldsPercent?.toFixed(1)}</td>
+                <td className="px-2 py-1 font-mono">{surgeData.top10Holders?.toFixed(1)}</td>
                 <td className="px-2 py-1 font-mono">{buySellRatio}({surgeData.transactionCount})</td>
                 <td className="px-2 py-1">{surgeData.protocol}</td>
                 <td className="px-2 py-1">{surgeData.dexPaid ? <span className='text-green-600'>是</span> : "否"}</td>
