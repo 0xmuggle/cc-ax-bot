@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useStore } from '@/lib/store';
-import { applyFiltersToToken } from "@/lib/filterUtils";
+import { applyFiltersToToken, calculateMore } from "@/lib/filterUtils";
 import { Token } from '@/lib/types';
 
 export const useFilteredTokens = () => {
@@ -14,6 +14,7 @@ export const useFilteredTokens = () => {
       const filtered = applyFiltersToToken(token, filters, solPrice);
       if(filtered) {
         // Calculate priceChange (涨幅) as multiplier
+        const info = calculateMore(token, filters, solPrice);
         const { surgeData, surgePrice } = token;
         const priceChange = (surgePrice.maxSurgedPrice / surgeData.surgedPrice);
         filtereds.push({
@@ -22,7 +23,8 @@ export const useFilteredTokens = () => {
             ...surgeData,
             priceChange,
           },
-          isHighMultiple: (filters.highMultiple && filters.highMultiple > 0) ? priceChange >= filters.highMultiple : false
+          moreInfo: info,
+          isHighMultiple: (filters.highMultiple && filters.highMultiple > 0) ? (info.pChange || priceChange) >= filters.highMultiple : false
         })
       }
     });

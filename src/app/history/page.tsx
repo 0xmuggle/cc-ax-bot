@@ -21,8 +21,9 @@ const HistoryPage: React.FC = () => {
                 <p className="text-xs font-mono text-gray-500">{new Date(log.timestamp).toLocaleString()}</p>
               </div>
               <p className="text-sm text-gray-600">命中策略: <span className="font-semibold">{log.strategyName}</span></p>
-              <p className="text-sm text-gray-600">市值: <span className="font-mono">${formatNumber(log.marketCapAtTrigger)}</span></p>
+              <p className="text-sm text-gray-600">市值: <span className="font-mono">${formatNumber(log.marketCapAtTrigger)} / ${formatNumber(log.estimateAtTrigger)}</span></p>
               <p className="text-xs text-gray-500 font-mono mt-2">CA: {log.tokenAddress}</p>
+              <p className="text-xs text-gray-500 font-mono mt-2">{log.description}</p>
             </div>
           ))
         )}

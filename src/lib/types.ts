@@ -61,7 +61,10 @@ export interface Token {
   surgePrice: SurgePrice;
   // For highlighting
   isHighMultiple?: boolean;
+  moreInfo?: any;
   // debug
+  priceAt1M?: number;
+  priceAt2M?: number;
   priceAt3M?: number;
   priceAt5M?: number;
   priceAt10M?: number;
@@ -70,6 +73,7 @@ export interface Token {
   buyPrice: number; // 买入价格
   position: number; // 仓位比例
   botId: string;
+  surges: Token[];
 }
 
 export interface Strategy {
@@ -97,6 +101,8 @@ export interface HistoryLog {
   tokenTicker: string;
   strategyName: string;
   marketCapAtTrigger: number;
+  estimateAtTrigger: number;
+  description: string;
 }
 
 // Represents the state of the main filter form
@@ -106,6 +112,7 @@ export interface FilterState {
   marketCapMax?: number;
   highMultiple?: number; // 高倍 (for highlighting)
   priceChange?: number; // 涨幅
+  singal?: number; // 涨幅
   volumeKMin?: number; // 交易量(K)
   volumeKMax?: number;
   totalTxMin?: number; // 交易总数
@@ -116,6 +123,10 @@ export interface FilterState {
   social?: string; // 社交
   top10?: number;
   devHolding?: number;
+  marketCap1MMin?: number;
+  marketCap1MMax?: number;
+  marketCap2MMin?: number;
+  marketCap2MMax?: number;
   marketCap3MMin?: number;
   marketCap3MMax?: number;
   marketCap5MMin?: number;

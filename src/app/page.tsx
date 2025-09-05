@@ -73,7 +73,8 @@ const Home: React.FC = () => {
             >
               {isAxiomTabOpen ? 'Axiom Tab is Open' : 'Axiom Tab Closed'}
             </div>
-            <Button variant="destructive" size="sm" onClick={() => useStore.getState().clearTokens()}>清除Tokens</Button>
+            <Button style={{ display: 'none' }} variant="destructive" size="sm" onClick={() => useStore.getState().clearTokens()}>清除Tokens</Button>
+            <Button style={{ display: 'none' }} variant="destructive" size="sm" onClick={() => useStore.getState().updateData()}>更新数据</Button>
             <Button style={{ display: 'none' }} size="sm" variant="outline" asChild>
               <a href="/test.zip" download>下载插件</a>
             </Button>
@@ -81,14 +82,8 @@ const Home: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div className="xl:col-span-1">
-          <StrategyManager />
-        </div>
-        <div className="xl:col-span-1">
-          <FilterForm onSaveStrategy={handleOpenSaveModal} />
-        </div>
-      </div>
+      <StrategyManager />
+      <FilterForm onSaveStrategy={handleOpenSaveModal} />
       {/* Bottom Section: Token Table */}
       <div className="w-full">
         <TokenTable tokens={filteredTokens} />
