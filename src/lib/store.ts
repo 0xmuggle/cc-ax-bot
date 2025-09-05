@@ -53,7 +53,8 @@ const initialFilterState: FilterState = {
   bundledMin: undefined,
   bundledMax: undefined,
   social: '',
-  useHistoricalData: false, // Default false
+  top10: undefined,
+  devHolding: undefined,
   marketCap3MMin: undefined,
   marketCap3MMax: undefined,
   marketCap5MMin: undefined,
@@ -64,7 +65,6 @@ const initialFilterState: FilterState = {
   marketCap15MMax: undefined,
   marketCap30MMin: undefined,
   marketCap30MMax: undefined,
-  dexPaid: undefined,
 };
 
 export const useStore = create<AppState>()(

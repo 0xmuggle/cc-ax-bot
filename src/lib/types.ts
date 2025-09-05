@@ -114,7 +114,8 @@ export interface FilterState {
   bundledMin?: number; // 捆绑
   bundledMax?: number;
   social?: string; // 社交
-  useHistoricalData?: boolean; // 使用历史数据
+  top10?: number;
+  devHolding?: number;
   marketCap3MMin?: number;
   marketCap3MMax?: number;
   marketCap5MMin?: number;
@@ -125,5 +126,4 @@ export interface FilterState {
   marketCap15MMax?: number;
   marketCap30MMin?: number;
   marketCap30MMax?: number;
-  dexPaid?: boolean;
 }

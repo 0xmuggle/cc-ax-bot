@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { FilterState } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from './ui/switch';
 
 interface FilterFormProps {
   onSaveStrategy: (currentFilters: FilterState) => void;
@@ -53,8 +53,8 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
     platform?: string;
     bundled: string; // Raw string input for range
     social?: string;
-    useHistoricalData?: boolean;
-    dexPaid?: boolean;
+    top10?: number;
+    devHolding?: number;
   }>({
     ticker: '',
     marketCap: '',
@@ -70,8 +70,8 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
     platform: '',
     bundled: '',
     social: '',
-    useHistoricalData: false,
-    dexPaid: undefined,
+    top10: undefined,
+    devHolding: undefined,
   });
 
   // Sync formState with global filters when global filters change (e.g., from strategy load)
@@ -83,7 +83,8 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
       priceChange: filters.priceChange,
       platform: filters.platform || '',
       social: filters.social || '',
-      useHistoricalData: filters.useHistoricalData || false,
+      top10: filters.top10 || undefined,
+      devHolding: filters.devHolding || undefined,
       // Convert range numbers back to string for local input display
       marketCap: formatRangeOutput(filters.marketCapMin, filters.marketCapMax, 1000),
       marketCap3M: formatRangeOutput(filters.marketCap3MMin, filters.marketCap3MMax, 1000),
@@ -108,7 +109,8 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
       priceChange: formState.priceChange || undefined,
       platform: formState.platform || undefined,
       social: formState.social || undefined,
-      useHistoricalData: formState.useHistoricalData || false,
+      top10: formState.top10 || undefined,
+      devHolding: formState.devHolding || undefined,
       
       // Parse range inputs from string to numbers
       marketCapMin: parseRangeInput(formState.marketCap, 1000)[0],
@@ -129,7 +131,6 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
       marketCap15MMax: parseRangeInput(formState.marketCap15M, 1000)[1],
       marketCap30MMin: parseRangeInput(formState.marketCap30M, 1000)[0],
       marketCap30MMax: parseRangeInput(formState.marketCap30M, 1000)[1],
-      dexPaid: formState.dexPaid || undefined,
     };
     setFilters(newFilters);
   };
@@ -150,8 +151,8 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
       platform: '',
       bundled: '',
       social: '',
-      useHistoricalData: false,
-      dexPaid: undefined,
+      top10: undefined,
+      devHolding: undefined,
     });
     resetFilters();
   };
@@ -173,17 +174,9 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
         <InputField label="交易总数" placeholder="10 or 10,20" value={formState.totalTx} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('totalTx', e.target.value)} />
         <InputField label="平台" placeholder="pump,bonk" value={formState.platform || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('platform', e.target.value)} />
         <InputField label="捆绑" placeholder="1 or 1,10" value={formState.bundled} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('bundled', e.target.value)} />
+        <InputField label="Dev" type="number" placeholder="10" value={formState.devHolding || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('devHolding', Number(e.target.value))} />
+        <InputField label="Top10" type="number" placeholder="10" value={formState.top10 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('top10', Number(e.target.value))} />
         <InputField label="社交" placeholder="twitter,telegram" value={formState.social || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('social', e.target.value)} />
-
-        <div className="flex items-center space-x-2 pt-6">
-          <Switch id="historical-data" checked={formState.useHistoricalData} onCheckedChange={checked => handleLocalInputChange('useHistoricalData', checked)} />
-          <label htmlFor="historical-data" className="text-sm font-medium whitespace-pre">历史数据</label>
-        </div>
-        <div className="flex items-center space-x-2 pt-6">
-          <Switch id="dex-paid" checked={formState.dexPaid} onCheckedChange={checked => handleLocalInputChange('dexPaid', checked)} />
-          <label htmlFor="dex-paid" className="text-sm font-medium whitespace-pre">付费DEX</label>
-        </div>
-
       </div>
       <div className="flex justify-end space-x-2 mt-4">
           <Button size="sm" variant="outline" onClick={handleSearch}>查询</Button>

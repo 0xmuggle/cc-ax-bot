@@ -2,22 +2,14 @@ import { Token, FilterState } from './types';
 
 export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice: number, isCheckTime: boolean = false): boolean => {
   const { surgeData, surgePrice } = token;
-
   if(isCheckTime) {
     // New Time-based Condition
     const currentTime = Date.now();
     const detectedAtTime = new Date(surgeData.detectedAt).getTime();
 
-    if (filters.useHistoricalData) {
-      // If useHistoricalData is true, detectedAt must be within the last 30 minutes
-      if ((currentTime - detectedAtTime) > 30 * 60 * 1000) {
-        return false;
-      }
-    } else {
-      // If useHistoricalData is false, detectedAt must be within the last 5 seconds
-      if ((currentTime - detectedAtTime) > 5 * 1000) {
-        return false;
-      }
+    // If useHistoricalData is false, detectedAt must be within the last 5 seconds
+    if ((currentTime - detectedAtTime) > 60 * 60 * 1000) {
+      return false;
     }
   }
 
@@ -52,8 +44,11 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
   if (filters.marketCap30MMin && (token.priceAt30M && mcAt30m < filters.marketCap30MMin || !mcAt30m)) return false;
   if (filters.marketCap30MMax && (token.priceAt30M && mcAt30m > filters.marketCap30MMax || !mcAt30m)) return false;
 
-  // dexPaid filter
-  if (filters.dexPaid !== undefined && surgeData.dexPaid !== filters.dexPaid) return false;
+  // Top 10 Holders filter
+  if (filters.top10 && surgeData.top10HoldersPercent > filters.top10) return false;
+
+  // Dev Holding filter
+  if (filters.devHolding && surgeData.devHoldsPercent > filters.devHolding) return false;
 
   // Price Change (涨幅) filter
   // Note: priceChange is calculated in useFilteredTokens, ensure it's available on the token
@@ -90,7 +85,7 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
       surgeData.discord,
     ].filter(Boolean).map(s => s?.toLowerCase());
 
-    if (!socialTerms.every(term => tokenSocials.some(ts => ts?.includes(term)))) return false;
+    if (!socialTerms.every((term: string) => tokenSocials.some(ts => ts?.includes(term)))) return false;
   }
 
   return true;
