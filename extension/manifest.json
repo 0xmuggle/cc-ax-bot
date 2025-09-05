@@ -10,7 +10,7 @@
   ],
   "host_permissions": [
     "https://1d2e5exq7jjmtcbchnvf.vercel.app/*",
-    "http://192.168.1.21:3000/*",
+    "http://*:3000/*",
     "https://axiom.trade/*"
   ],
   "background": {

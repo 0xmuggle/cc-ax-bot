@@ -17,6 +17,8 @@ interface AppState {
 
   tokens: Token[];
   addOrUpdateTokens: (tokens: Token[]) => void;
+  updateData: () => void;
+  updateToken: (token: Token, update: Token) => Token;
 
   strategies: Strategy[];
   addStrategy: (strategy: Strategy) => void;
@@ -55,6 +57,10 @@ const initialFilterState: FilterState = {
   social: '',
   top10: undefined,
   devHolding: undefined,
+  marketCap1MMin: undefined,
+  marketCap1MMax: undefined,
+  marketCap2MMin: undefined,
+  marketCap2MMax: undefined,
   marketCap3MMin: undefined,
   marketCap3MMax: undefined,
   marketCap5MMin: undefined,
@@ -74,8 +80,54 @@ export const useStore = create<AppState>()(
       setSolPrice: (price) => set({ solPrice: price }),
 
       tokens: [],
+      updateData: () => {
+        const { tokens } = get();
+        let nextTokens: Token[] = [];
+        tokens.reverse().forEach(item => {
+          const index = nextTokens.findIndex(t => t.surgeData.tokenAddress === item.surgeData.tokenAddress);
+          if(index > -1) {
+            const innerIndex = nextTokens[index].surges.findIndex(t => t.surgeData.detectedAt === item.surgeData.detectedAt);
+            if(innerIndex === -1) {
+              nextTokens[index].surges.unshift(item);
+            }
+          } else {
+            nextTokens.push({
+              ...item,
+              surges: [],
+            })
+          }
+        });
+        set({ 
+          tokens: nextTokens.sort((a: any, b: any) => new Date(b.surgeData.detectedAt).getTime() - new Date(a.surgeData.detectedAt).getTime()),
+        });
+      },
+      updateToken: (token: Token, update: Token) => {
+        let nextToken: any = { ...token };
+        const { priceAt1M, priceAt2M, priceAt5M, priceAt10M, priceAt15M, priceAt30M, priceAt3M } = token;
+        // 检查是否更新5分钟市值
+        const diff = (Date.now() - new Date(update.surgeData.detectedAt).getTime()) / 1000 / 60;
+        if(diff < 2 && diff > 1 && !priceAt1M) {
+          nextToken.priceAt1M = update.surgePrice.currentPriceSol;
+        } else if(diff < 3 && diff > 2 && !priceAt2M) {
+          nextToken.priceAt2M = update.surgePrice.currentPriceSol;
+        } else if(diff < 5 && diff > 3 && !priceAt3M) {
+          nextToken.priceAt3M = update.surgePrice.currentPriceSol;
+        } else if(diff < 10 && diff > 5 && !priceAt5M) {
+          nextToken.priceAt5M = update.surgePrice.currentPriceSol;
+        } else if(diff < 15 && diff > 10 && !priceAt10M) {
+          nextToken.priceAt10M = update.surgePrice.currentPriceSol;
+        } else if(diff < 30 && diff > 15 && !priceAt15M) {
+          nextToken.priceAt15M = update.surgePrice.currentPriceSol;
+        }else if(diff > 30 && !priceAt30M) {
+          nextToken.priceAt30M = update.surgePrice.currentPriceSol;
+        } 
+        return {
+          ...nextToken,
+          ...update,
+        };
+      },
       addOrUpdateTokens: (updates: Token[]) => {
-        let { tokens, strategies: baseStrategies, solPrice, bots, addHistoryLog, handleStrategyMatch } = get();
+        let { tokens, strategies: baseStrategies, solPrice, bots, addHistoryLog, handleStrategyMatch, updateToken } = get();
         let nextTokens = [...tokens];
         const strategies = baseStrategies.filter(item => item.enabled === true).sort((a, b) => b.priority - a.priority);
         updates.forEach((update: Token) => {
@@ -83,34 +135,27 @@ export const useStore = create<AppState>()(
           const { protocolDetails, signature, tokenUri, pairAddress, tokenImage, pairSolAccount, pairTokenAccount, ...restOfTokenUpdate }: any = update;
           
           // Use tokenAddress AND detectedAt for uniqueness
-          let existingIndex = nextTokens.findIndex(
-            t => t.surgeData.tokenAddress === restOfTokenUpdate.surgeData.tokenAddress &&
-                t.surgeData.detectedAt === restOfTokenUpdate.surgeData.detectedAt
-          );
+          let existingIndex = nextTokens.findIndex(t => t.surgeData.tokenAddress === restOfTokenUpdate.surgeData.tokenAddress);
           if (existingIndex > -1) {
-            let update: any = {};
-            const { priceAt5M, priceAt10M, priceAt15M, priceAt30M, priceAt3M } = nextTokens[existingIndex];
-            
-            // 检查是否更新5分钟市值
-            const diff = (Date.now() - new Date(restOfTokenUpdate.surgeData.detectedAt).getTime()) / 1000 / 60;
-            if(diff < 5 && diff > 3 && !priceAt3M) {
-              update.priceAt3M = restOfTokenUpdate.surgePrice.currentPriceSol;
-            } else if(diff < 10 && diff > 5 && !priceAt5M) {
-              update.priceAt5M = restOfTokenUpdate.surgePrice.currentPriceSol;
-            } else if(diff < 15 && diff > 10 && !priceAt10M) {
-              update.priceAt10M = restOfTokenUpdate.surgePrice.currentPriceSol;
-            } else if(diff < 30 && diff > 15 && !priceAt15M) {
-              update.priceAt15M = restOfTokenUpdate.surgePrice.currentPriceSol;
-            }else if(diff > 30 && !priceAt30M) {
-              update.priceAt30M = restOfTokenUpdate.surgePrice.currentPriceSol;
-            } 
-            nextTokens[existingIndex] = {
-              ...update,
-              ...nextTokens[existingIndex],
-              ...restOfTokenUpdate,
-            };
+            const { surges = [], ...token} = nextTokens[existingIndex];
+            if(token.surgeData.detectedAt === restOfTokenUpdate.surgeData.detectedAt) {
+              // 更新数据
+              nextTokens[existingIndex] = updateToken(nextTokens[existingIndex], update);
+            } else {
+              const innerIndex = surges.findIndex(t => t.surgeData.detectedAt === restOfTokenUpdate.surgeData.detectedAt);
+              if(innerIndex > -1) {
+                // 更新数据
+                nextTokens[existingIndex].surges[innerIndex] = updateToken(nextTokens[existingIndex].surges[innerIndex], update);
+              } else {
+                // 追加新数据
+                nextTokens[existingIndex].surges.unshift(restOfTokenUpdate);
+              }
+            }
           } else {
-            nextTokens.unshift(restOfTokenUpdate);
+            nextTokens.unshift({
+              ...restOfTokenUpdate,
+              surges: [],
+            });
             existingIndex = 0;
           }
           // 检查是否命中策略
@@ -173,12 +218,13 @@ export const useStore = create<AppState>()(
         });
 
         // Enforce max length
+        // Enforce max length
         if (nextTokens.length >= MAX_TOKENS) {
           nextTokens = nextTokens.slice(0, MAX_TOKENS * 0.8);
         }
         
         set({ 
-          tokens: nextTokens.sort((a: any, b: any) => new Date(b.surgeData.detectedAt).getTime() - new Date(a.surgeData.detectedAt).getTime())
+          tokens: nextTokens.sort((a: any, b: any) => new Date(b.surgeData.detectedAt).getTime() - new Date(a.surgeData.detectedAt).getTime()),
         });
       },
       clearTokens: () => set({ tokens: [] }),
