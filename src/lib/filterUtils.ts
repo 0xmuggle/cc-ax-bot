@@ -21,6 +21,7 @@ export const calculateMore = (tokenInfo: Token, filters:FilterState, solPrice: n
     priceAt15M,
     priceAt30M,
     priceAt3M,
+    maxPrice
   }: any = token;
 
   const baseMc = surgeData.surgedPrice * surgeData.supply * solPrice;
@@ -47,25 +48,29 @@ export const calculateMore = (tokenInfo: Token, filters:FilterState, solPrice: n
     : 0;
   let mc = 0;
   let buyMc = 0;
+  let internalBuyMc = 0;
   let pChange = 0;
   let internal = filters.priceChange;
   if(filters.singal) {
      buyMc = baseMc;
-     pChange = surgePrice.maxSurgedPrice * surgeData.supply * solPrice / buyMc;
+     internalBuyMc = baseMc;
+     pChange = maxPrice * surgeData.supply * solPrice / buyMc;
   } else {
     mc = baseMc;
-    if(filters.marketCap15MMax) mc = priceAt15mMc;
-    if(filters.marketCap10MMax) mc = priceAt10mMc;
-    if(filters.marketCap5MMax) mc = priceAt5mMc;
-    if(filters.marketCap3MMax) mc = priceAt3mMc;
-    if(filters.marketCap2MMax) mc = priceAt2mMc;
     if(filters.marketCap1MMax) mc = priceAt1mMc;
+    if(filters.marketCap2MMax) mc = priceAt2mMc;
+    if(filters.marketCap3MMax) mc = priceAt3mMc;
+    if(filters.marketCap5MMax) mc = priceAt5mMc;
+    if(filters.marketCap10MMax) mc = priceAt10mMc;
+    if(filters.marketCap15MMax) mc = priceAt15mMc;
     if(!internal) internal = 1;
+    internalBuyMc = baseMc * internal;
     buyMc = Math.max(baseMc * internal, mc || baseMc);
-    pChange = surgePrice.maxSurgedPrice * surgeData.supply * solPrice / buyMc;
+    pChange = maxPrice * surgeData.supply * solPrice / buyMc;
   }
 
   return {
+    internalBuyMc,
     buyMc,
     pChange,
     priceAt1mMc,
@@ -80,25 +85,74 @@ export const calculateMore = (tokenInfo: Token, filters:FilterState, solPrice: n
   }
 }
 
+// 将时间字符串转换为分钟数，便于比较
+const timeToMinutes = (timeStr: string) => {
+  if(!timeStr) return 0;
+  const [hours, minutes] = timeStr?.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+export const checkRangeTime = (timeStr: string = '') => {
+  try {
+    const regex = /^([0-1][0-9]|2[0-3]|[0-9]):[0-5][0-9]$/;
+    const [start, end] = timeStr.split('-');
+    if (regex.test(start) && regex.test(end)) {
+      return true;
+    }
+  } catch {
+
+  }
+  return false;
+}
+
+const checkRanges = (ranges: any[], dateStr: string) => {
+  const timePart = new Date(dateStr).toLocaleTimeString().slice(0, 5);
+  const dateMinutes = timeToMinutes(timePart);
+
+  // 检查是否在任一时间段内
+  for (const range of ranges) {
+    const [start, end] = range.split("-");
+    const startMinutes = timeToMinutes(start);
+    const endMinutes = timeToMinutes(end);
+    // 处理跨天的情况（如22:30到00:30）
+    if (endMinutes <= startMinutes) {
+      // 如果时间在 00:00 到 end 之间 // 如果时间在 start 到 23:59 之间
+      if (dateMinutes <= endMinutes || dateMinutes >= startMinutes) {
+        return true;
+      }
+    } else {
+      if (dateMinutes >= startMinutes && dateMinutes <= endMinutes) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice: number, isCheckTime: boolean = false): boolean => {
   const { surgeData, surgePrice } = token;
+
+  // Ticker filter
+  if (filters.ticker && surgeData.tokenTicker.toLowerCase() !== filters.ticker.toLowerCase()) {
+    return false;
+  }
+
+  if(filters.ranges && !checkRanges(filters.ranges.split(','), surgeData.detectedAt)) {
+    return false;
+  }
+
   if(isCheckTime) {
     // New Time-based Condition
     const currentTime = Date.now();
     const detectedAtTime = new Date(surgeData.detectedAt).getTime();
     const diff = (currentTime - detectedAtTime) / 60  /  1000;
     // If useHistoricalData is false, detectedAt must be within the last 5 seconds
-    if (diff > 15 * 60 * 1000) {
+    if (diff > 12) {
       return false;
     }
-    if (diff < 2 * 60 * 1000) {
+    if (diff < 1) {
       return false;
     }
-  }
-
-  // Ticker filter
-  if (filters.ticker && surgeData.tokenTicker.toLowerCase() !== filters.ticker.toLowerCase()) {
-    return false;
   }
 
   // Market Cap filter
@@ -108,33 +162,35 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
   
   // New Market Cap filters for different time points
   const mcAt1m = token.priceAt1M ? token.priceAt1M * surgeData.supply * solPrice : 0;
-  if (filters.marketCap1MMin && (token.priceAt1M && mcAt1m < filters.marketCap1MMin || !mcAt1m)) return false;
-  if (filters.marketCap1MMax && (token.priceAt1M && mcAt1m > filters.marketCap1MMax || !mcAt1m)) return false;
+  if (filters.marketCap1MMin && mcAt1m < filters.marketCap1MMin) return false;
+  if (filters.marketCap1MMax && mcAt1m > filters.marketCap1MMax) return false;
+  if (filters.onlyRise && filters.marketCap1MMax && mcAt1m < marketCapUSD) return false;
 
   const mcAt2m = token.priceAt2M ? token.priceAt2M * surgeData.supply * solPrice : 0;
-  if (filters.marketCap2MMin && (token.priceAt2M && mcAt2m < filters.marketCap2MMin || !mcAt2m)) return false;
-  if (filters.marketCap2MMax && (token.priceAt2M && mcAt2m > filters.marketCap2MMax || !mcAt2m)) return false;
+  if (filters.marketCap2MMin && mcAt2m < filters.marketCap2MMin) return false;
+  if (filters.marketCap2MMax && mcAt2m > filters.marketCap2MMax) return false;
+  if (filters.onlyRise && filters.marketCap2MMax && mcAt2m < mcAt1m) return false;
 
   const mcAt3m = token.priceAt3M ? token.priceAt3M * surgeData.supply * solPrice : 0;
-  if (filters.marketCap3MMin && (token.priceAt3M && mcAt3m < filters.marketCap3MMin || !mcAt3m)) return false;
-  if (filters.marketCap3MMax && (token.priceAt3M && mcAt3m > filters.marketCap3MMax || !mcAt3m)) return false;
-  if(filters.marketCap3MMax && token.priceAt2M  && token.priceAt1M && token.priceAt3M && (Math.max(token.priceAt3M, token.priceAt2M, token.priceAt1M, surgeData.surgedPrice) !== token.priceAt3M || Math.min(token.priceAt3M, token.priceAt2M, token.priceAt1M, surgeData.surgedPrice) !== surgeData.surgedPrice)) return false;
+  if (filters.marketCap3MMin && mcAt3m < filters.marketCap3MMin) return false;
+  if (filters.marketCap3MMax && mcAt3m > filters.marketCap3MMax) return false;
+  if (filters.onlyRise && filters.marketCap3MMax && mcAt3m < mcAt2m) return false;
 
   const mcAt5m = token.priceAt5M ? token.priceAt5M * surgeData.supply * solPrice : 0;
-  if (filters.marketCap5MMin && (token.priceAt5M && mcAt5m < filters.marketCap5MMin || !mcAt5m)) return false;
-  if (filters.marketCap5MMax && (token.priceAt5M && mcAt5m > filters.marketCap5MMax || !mcAt5m)) return false;
+  if (filters.marketCap5MMin && (mcAt5m < filters.marketCap5MMin)) return false;
+  if (filters.marketCap5MMax && (mcAt5m > filters.marketCap5MMax)) return false;
 
   const mcAt10m = token.priceAt10M ? token.priceAt10M * surgeData.supply * solPrice : 0;
-  if (filters.marketCap10MMin && (token.priceAt10M && mcAt10m < filters.marketCap10MMin || !mcAt10m)) return false;
-  if (filters.marketCap10MMax && (token.priceAt10M && mcAt10m > filters.marketCap10MMax || !mcAt10m)) return false;
+  if (filters.marketCap10MMin && (mcAt10m < filters.marketCap10MMin)) return false;
+  if (filters.marketCap10MMax && (mcAt10m > filters.marketCap10MMax)) return false;
 
   const mcAt15m = token.priceAt15M ? token.priceAt15M * surgeData.supply * solPrice : 0;
-  if (filters.marketCap15MMin && (token.priceAt15M && mcAt15m < filters.marketCap15MMin || !mcAt15m)) return false;
-  if (filters.marketCap15MMax && (token.priceAt15M && mcAt15m > filters.marketCap15MMax || !mcAt15m)) return false;
+  if (filters.marketCap15MMin && (mcAt15m < filters.marketCap15MMin)) return false;
+  if (filters.marketCap15MMax && (mcAt15m > filters.marketCap15MMax)) return false;
 
   const mcAt30m = token.priceAt30M ? token.priceAt30M * surgeData.supply * solPrice : 0;
-  if (filters.marketCap30MMin && (token.priceAt30M && mcAt30m < filters.marketCap30MMin || !mcAt30m)) return false;
-  if (filters.marketCap30MMax && (token.priceAt30M && mcAt30m > filters.marketCap30MMax || !mcAt30m)) return false;
+  if (filters.marketCap30MMin && (mcAt30m < filters.marketCap30MMin)) return false;
+  if (filters.marketCap30MMax && (mcAt30m > filters.marketCap30MMax)) return false;
 
   // Top 10 Holders filter
   if (filters.top10 && surgeData.top10HoldersPercent > Number(filters.top10)) return false;
@@ -144,8 +200,13 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
 
   // Price Change (涨幅) filter
   // Note: priceChange is calculated in useFilteredTokens, ensure it's available on the token
-  const priceChange = surgePrice.maxSurgedPrice / surgeData.surgedPrice;
-  if (filters.priceChange && (priceChange ?? 0) < filters.priceChange) return false;
+  if(isCheckTime) {
+    const priceChange = surgePrice.currentPriceSol / surgeData.surgedPrice;
+    if (filters.priceChange && (priceChange ?? 0) < filters.priceChange) return false;
+  } else {
+    const priceChange = token.maxPrice / surgeData.surgedPrice;
+    if (filters.priceChange && (priceChange ?? 0) < filters.priceChange) return false;
+  }
 
   // Volume (K) filter (converted to USD)
   const volumeUSD = surgeData.volumeSol * solPrice;

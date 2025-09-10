@@ -8,8 +8,9 @@ import StrategyManager from '@/components/StrategyManager';
 import FilterForm from '@/components/FilterForm';
 import { SaveStrategyModal } from '@/components/SaveStrategyModal';
 import { useFilteredTokens } from '@/hooks/useFilteredTokens';
-import { FilterState } from '@/lib/types';
+import { FilterState, Strategy } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { exportToJsonFile } from '@/lib/exportDB';
 
 const Home: React.FC = () => {
   const { solPrice } = useStore();
@@ -17,12 +18,22 @@ const Home: React.FC = () => {
   const { filteredTokens, highMultiplierCount } = useFilteredTokens();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [filtersToSave, setFiltersToSave] = useState<FilterState | null>(null);
+  const [strategy, setStrategy] = useState({});
+  // const [filtersToSave, setFiltersToSave] = useState<FilterState | null>(null);
 
   const handleOpenSaveModal = (currentFilters: FilterState) => {
-    setFiltersToSave(currentFilters);
+    setStrategy({ filters: currentFilters });
     setIsModalOpen(true);
   };
+
+  const handleEditModal = (value: Strategy) => {
+    setStrategy(value);
+    setIsModalOpen(true);
+  };
+
+  const download = () => {
+    exportToJsonFile();
+  }
 
   return (
     <div className="space-y-4">
@@ -44,7 +55,7 @@ const Home: React.FC = () => {
                 <span>
                   高倍:{' '}
                   <span className="font-bold text-yellow-600">
-                    {highMultiplierCount}
+                    {highMultiplierCount}<span className='text-xs'>({(highMultiplierCount / filteredTokens.length).toFixed(2)})</span>
                   </span>
                 </span>
                 <span>
@@ -75,6 +86,7 @@ const Home: React.FC = () => {
             </div>
             <Button style={{ display: 'none' }} variant="destructive" size="sm" onClick={() => useStore.getState().clearTokens()}>清除Tokens</Button>
             <Button style={{ display: 'none' }} variant="destructive" size="sm" onClick={() => useStore.getState().updateData()}>更新数据</Button>
+            <Button variant="destructive" size="sm" onClick={() => download()}>下载</Button>
             <Button style={{ display: 'none' }} size="sm" variant="outline" asChild>
               <a href="/test.zip" download>下载插件</a>
             </Button>
@@ -82,7 +94,7 @@ const Home: React.FC = () => {
           </div>
         </div>
       </div>
-      <StrategyManager />
+      <StrategyManager onEditModal={handleEditModal} />
       <FilterForm onSaveStrategy={handleOpenSaveModal} />
       {/* Bottom Section: Token Table */}
       <div className="w-full">
@@ -92,7 +104,7 @@ const Home: React.FC = () => {
       <SaveStrategyModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        filtersToSave={filtersToSave}
+        strategy={strategy}
       />
     </div>
   );

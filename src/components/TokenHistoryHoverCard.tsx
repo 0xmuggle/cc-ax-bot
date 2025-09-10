@@ -43,7 +43,7 @@ const TokenHistoryHoverCard: React.FC<TokenHistoryHoverCardProps> = ({ surges })
           <span className='text-fuchsia-700 inline-block w-[70px]'>30m</span>
         </div>
       {surges.sort((a: any, b: any) => new Date(b.surgeData.detectedAt).getTime() - new Date(a.surgeData.detectedAt).getTime()).map(token => {
-        const priceChange = (token.surgePrice.maxSurgedPrice / token.surgeData.surgedPrice);
+        const priceChange = (token.maxPrice / token.surgeData.surgedPrice);
         const marketCaps = calculateMarketCaps(token);
         return (
           <div key={token.surgeData.detectedAt} className="border-b last:border-b-0">

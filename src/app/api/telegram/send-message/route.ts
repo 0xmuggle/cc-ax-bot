@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const url = `https://api.telegram.org/bot${apiKey}/sendMessage`;
-    console.log("sned", process.env.proxy);
+    console.log("send", content);
     const response = await fetch(url, {
       method: 'POST',
       headers: {

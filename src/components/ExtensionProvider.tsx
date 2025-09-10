@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useCallback, createContext, useContext, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { throttle } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
 // Define the structure of the message from the content script
 interface AxiomMessage {
@@ -19,10 +20,11 @@ interface ExtensionContextType {
 const ExtensionContext = createContext<ExtensionContextType | null>(null);
 
 export function ExtensionProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   const { addOrUpdateTokens, setSolPrice } = useStore();
   const axiomTabRef = useRef<Window | null>(null);
   const [isAxiomTabOpen, setIsAxiomTabOpen] = useState(false);
-
   const AXIOM_WINDOW_NAME = 'AXIOM_TRADER_WINDOW';
   const openAxiomTab = useCallback(() => {
     if (axiomTabRef.current && !axiomTabRef.current.closed) {
@@ -72,6 +74,7 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
   }, [throttledHandleMessage]); // Dependency on throttledHandleMessage to ensure latest version is used
 
   useEffect(() => {
+    if(pathname !== '/') return;
     // Auto-open Axiom tab on component mount
     openAxiomTab();
 
