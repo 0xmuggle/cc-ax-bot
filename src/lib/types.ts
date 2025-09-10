@@ -63,6 +63,7 @@ export interface Token {
   isHighMultiple?: boolean;
   moreInfo?: any;
   // debug
+  maxPrice: number;
   priceAt1M?: number;
   priceAt2M?: number;
   priceAt3M?: number;
@@ -70,6 +71,7 @@ export interface Token {
   priceAt10M?: number;
   priceAt15M?: number;
   priceAt30M?: number;
+  buyAt: string;
   buyPrice: number; // 买入价格
   position: number; // 仓位比例
   botId: string;
@@ -137,4 +139,6 @@ export interface FilterState {
   marketCap15MMax?: number;
   marketCap30MMin?: number;
   marketCap30MMax?: number;
+  ranges?: string
+  onlyRise: boolean;
 }

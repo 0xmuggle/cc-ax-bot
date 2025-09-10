@@ -4,35 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { FilterState } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { checkRangeTime } from '@/lib/filterUtils';
+import { formatFilter, formatRangeOutput, parseRangeInput } from '@/lib/utils';
 import { Switch } from './ui/switch';
 
 interface FilterFormProps {
   onSaveStrategy: (currentFilters: FilterState) => void;
 }
-
-// Helper to parse range inputs like "10" (min only) or "10,20" (min,max)
-export const parseRangeInput = (value: string, multiplier: number = 1): [number | undefined, number | undefined] => {
-  if (!value) return [undefined, undefined];
-  const parts = value.split(',').map(p => p.trim());
-  if (parts.length === 1 && parts[0]) {
-    const num = parseFloat(parts[0]);
-    return [undefined, num * multiplier]; // Only min value provided
-  }
-  if (parts.length === 2) {
-    const min = parts[0] ? parseFloat(parts[0]) * multiplier : undefined;
-    const max = parts[1] ? parseFloat(parts[1]) * multiplier : undefined;
-    return [min, max];
-  }
-  return [undefined, undefined];
-};
-
-// Helper to format range values back to string for display
-export const formatRangeOutput = (min: number | undefined, max: number | undefined, divisor: number = 1): string => {
-  if (min === undefined && max === undefined) return '';
-  if (min !== undefined && max === undefined) return `${min / divisor},`;
-  if (min === undefined && max !== undefined) return `${max / divisor}`;
-  return `${min !== undefined ? min / divisor : ''},${max !== undefined ? max / divisor : ''}`;
-};
 
 const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
   const { filters, setFilters, resetFilters } = useStore();
@@ -58,6 +36,8 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
     social?: string;
     top10?: number;
     devHolding?: number;
+    ranges?: string;
+    onlyRise: boolean;
   }>({
     ticker: '',
     marketCap: '',
@@ -78,6 +58,8 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
     social: '',
     top10: 40,
     devHolding: 10,
+    ranges: '',
+    onlyRise: false,
   });
 
   // Sync formState with global filters when global filters change (e.g., from strategy load)
@@ -92,6 +74,8 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
       social: filters.social || '',
       top10: filters.top10 || undefined,
       devHolding: filters.devHolding || undefined,
+      ranges: filters.ranges || undefined,
+      onlyRise: filters.onlyRise || false,
       // Convert range numbers back to string for local input display
       marketCap: formatRangeOutput(filters.marketCapMin, filters.marketCapMax, 1000),
       marketCap1M: formatRangeOutput(filters.marketCap1MMin, filters.marketCap1MMax, 1000),
@@ -112,45 +96,15 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
   };
 
   const handleSearch = () => {
-    const newFilters: FilterState = {
-      ticker: formState.ticker || undefined,
-      highMultiple: formState.highMultiple || 3,
-      priceChange: formState.priceChange || undefined,
-      singal: formState.singal || undefined,
-      platform: formState.platform || undefined,
-      social: formState.social || undefined,
-      top10: formState.top10 || undefined,
-      devHolding: formState.devHolding || undefined,
-      
-      // Parse range inputs from string to numbers
-      marketCapMin: parseRangeInput(formState.marketCap, 1000)[0],
-      marketCapMax: parseRangeInput(formState.marketCap, 1000)[1],
-      volumeKMin: parseRangeInput(formState.volumeK, 1)[0],
-      volumeKMax: parseRangeInput(formState.volumeK, 1)[1],
-      totalTxMin: parseRangeInput(formState.totalTx, 1)[0],
-      totalTxMax: parseRangeInput(formState.totalTx, 1)[1],
-      bundledMin: parseRangeInput(formState.bundled, 1)[0],
-      bundledMax: parseRangeInput(formState.bundled, 1)[1],
-      marketCap1MMin: parseRangeInput(formState.marketCap1M, 1000)[0],
-      marketCap1MMax: parseRangeInput(formState.marketCap1M, 1000)[1],
-      marketCap2MMin: parseRangeInput(formState.marketCap2M, 1000)[0],
-      marketCap2MMax: parseRangeInput(formState.marketCap2M, 1000)[1],
-      marketCap3MMin: parseRangeInput(formState.marketCap3M, 1000)[0],
-      marketCap3MMax: parseRangeInput(formState.marketCap3M, 1000)[1],
-      marketCap5MMin: parseRangeInput(formState.marketCap5M, 1000)[0],
-      marketCap5MMax: parseRangeInput(formState.marketCap5M, 1000)[1],
-      marketCap10MMin: parseRangeInput(formState.marketCap10M, 1000)[0],
-      marketCap10MMax: parseRangeInput(formState.marketCap10M, 1000)[1],
-      marketCap15MMin: parseRangeInput(formState.marketCap15M, 1000)[0],
-      marketCap15MMax: parseRangeInput(formState.marketCap15M, 1000)[1],
-      marketCap30MMin: parseRangeInput(formState.marketCap30M, 1000)[0],
-      marketCap30MMax: parseRangeInput(formState.marketCap30M, 1000)[1],
-    };
-    setFilters(newFilters);
+    const newFilters: FilterState = formatFilter(formState)
+    if(formState.ranges && checkRangeTime(formState.ranges) || !formState.ranges) {
+      setFilters(newFilters);
+    }
   };
   
   const handleReset = () => {
     setFormState({
+      ranges: '',
       ticker: '',
       marketCap: '',
       marketCap1M: '',
@@ -170,6 +124,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
       social: '',
       top10: 40,
       devHolding: 10,
+      onlyRise: false,
     });
     resetFilters();
   };
@@ -197,6 +152,16 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
         <InputField label="Dev" type="number" placeholder="10" value={formState.devHolding || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('devHolding', Number(e.target.value))} />
         <InputField label="Top10" type="number" placeholder="10" value={formState.top10 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('top10', Number(e.target.value))} />
         <InputField label="社交" placeholder="twitter,telegram" value={formState.social || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('social', e.target.value)} />
+        <InputField label="时间范围" placeholder="00:30-14:00,14:30-15:00" value={formState.ranges || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('ranges', e.target.value)} />
+        <div>
+          <label className="block text-xs font-medium text-gray-800 mb-1">追涨</label>
+          <div className='mt-1 block w-full px-3 py-1 bg-white border border-gray-300 rounded-md shadow-sm text-sm'>
+            <Switch 
+              checked={formState.onlyRise}
+              onCheckedChange={(enabled) => handleLocalInputChange('onlyRise', enabled)}
+            />
+          </div>
+        </div>
       </div>
       <div className="flex justify-end space-x-2 mt-4">
           <Button size="sm" variant="outline" onClick={handleSearch}>查询</Button>

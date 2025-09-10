@@ -4,8 +4,9 @@ import React from 'react';
 import { useStore } from '@/lib/store';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { parseRangeInput } from './FilterForm';
-const StrategyManager: React.FC = () => {
+import { Strategy } from '@/lib/types';
+import { formatFilter, parseRangeInput } from '@/lib/utils';
+const StrategyManager: React.FC<{ onEditModal: (strategy: Strategy) => void }> = ({ onEditModal }) => {
   const { strategies, bots, updateStrategy, deleteStrategy, setFilters } = useStore();
 
   const getBotName = (botId: string) => {
@@ -13,32 +14,12 @@ const StrategyManager: React.FC = () => {
     return bot ? bot.name : 'N/A';
   };
 
+  const editFilters = (strategy: Strategy) => {
+    onEditModal(strategy);
+  }
+
   const handleFilters = (filters: any) => {
-    setFilters({
-      ...filters,
-      marketCapMin: parseRangeInput(filters.marketCap, 1000)[0],
-      marketCapMax: parseRangeInput(filters.marketCap, 1000)[1],
-      marketCap1MMin: parseRangeInput(filters.marketCap1M, 1000)[0],
-      marketCap1MMax: parseRangeInput(filters.marketCap1M, 1000)[1],
-      marketCap2MMin: parseRangeInput(filters.marketCap2M, 1000)[0],
-      marketCap2MMax: parseRangeInput(filters.marketCap2M, 1000)[1],
-      marketCap3MMin: parseRangeInput(filters.marketCap3M, 1000)[0],
-      marketCap3MMax: parseRangeInput(filters.marketCap3M, 1000)[1],
-      marketCap5MMin: parseRangeInput(filters.marketCap5M, 1000)[0],
-      marketCap5MMax: parseRangeInput(filters.marketCap5M, 1000)[1],
-      marketCap10MMin: parseRangeInput(filters.marketCap10M, 1000)[0],
-      marketCap10MMax: parseRangeInput(filters.marketCap10M, 1000)[1],
-      marketCap15MMin: parseRangeInput(filters.marketCap15M, 1000)[0],
-      marketCap15MMax: parseRangeInput(filters.marketCap15M, 1000)[1],
-      marketCap30MMin: parseRangeInput(filters.marketCap30M, 1000)[0],
-      marketCap30MMax: parseRangeInput(filters.marketCap30M, 1000)[1],
-      volumeKMin: parseRangeInput(filters.volumeK, 1)[0],
-      volumeKMax: parseRangeInput(filters.volumeK, 1)[1],
-      totalTxMin: parseRangeInput(filters.totalTx, 1)[0],
-      totalTxMax: parseRangeInput(filters.totalTx, 1)[1],
-      bundledMin: parseRangeInput(filters.bundled, 1)[0],
-      bundledMax: parseRangeInput(filters.bundled, 1)[1],
-    })
+    setFilters(formatFilter(filters));
   }
 
   return (
@@ -77,6 +58,7 @@ const StrategyManager: React.FC = () => {
                 <td className="px-4 py-3 text-right">
                   <div className="flex justify-end items-center space-x-2">
                     <Button size="sm" variant="outline" onClick={() => handleFilters(strategy.filters)}>查看</Button>
+                    <Button size="sm" variant="destructive" onClick={() => editFilters(strategy)}>编辑</Button>
                     <Button size="sm" variant="destructive" onClick={() => deleteStrategy(strategy.id)}>删除</Button>
                   </div>
                 </td>
