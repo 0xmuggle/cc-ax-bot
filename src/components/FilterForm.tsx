@@ -146,7 +146,7 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
         <InputField className='hidden' label="市值(15M)" placeholder="10 or 10,20" value={formState.marketCap15M} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('marketCap15M', e.target.value)} />
         <InputField className='hidden' label="市值(30M)" placeholder="10 or 10,20" value={formState.marketCap30M} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('marketCap30M', e.target.value)} />
         <InputField label="交易量(K)" placeholder="10 or 10,20" value={formState.volumeK} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('volumeK', e.target.value)} />
-        <InputField label="交易总数" placeholder="10 or 10,20" value={formState.totalTx} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('totalTx', e.target.value)} />
+        <InputField label="买卖比" placeholder="10 or 10,20" value={formState.totalTx} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('totalTx', e.target.value)} />
         <InputField label="平台" placeholder="pump,bonk" value={formState.platform || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('platform', e.target.value)} />
         <InputField label="捆绑" placeholder="1 or 1,10" value={formState.bundled} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('bundled', e.target.value)} />
         <InputField label="Dev" type="number" placeholder="10" value={formState.devHolding || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('devHolding', Number(e.target.value))} />

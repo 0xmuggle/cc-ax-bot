@@ -1,4 +1,5 @@
 const AXIOM_WINDOW_NAME = 'AXIOM_TRADER_WINDOW';
+const FM_WINDOW_NAME = 'FM_TRADER_WINDOW';
 let dashboardUrlPattern = 'http://192.168.1.21:3000/'; // Default URL
 
 // Function to get the dashboard URL from storage
@@ -44,12 +45,21 @@ setInterval(async () => {
 
   // 2. Find all Axiom trading windows
   const axiomTabs = await chrome.tabs.query({ url: 'https://axiom.trade/discover*' });
+  const fmTabs = await chrome.tabs.query({ url: 'https://chain.fm/home*' });
 
   let axiomTraderWindows = [];
   for (const tab of axiomTabs) {
     const windowName = await getTabWindowName(tab.id);
     if (windowName === AXIOM_WINDOW_NAME) {
       axiomTraderWindows.push(tab);
+    }
+  }
+
+  let fmTraderWindows = [];
+  for (const tab of fmTabs) {
+    const windowName = await getTabWindowName(tab.id);
+    if (windowName === FM_WINDOW_NAME) {
+      fmTraderWindows.push(tab);
     }
   }
 
@@ -60,14 +70,24 @@ setInterval(async () => {
       chrome.tabs.remove(tab.id);
       console.log(`Closed Axiom window (dashboard not open): ${tab.url}`);
     }
+    for (const tab of fmTraderWindows) {
+      chrome.tabs.remove(tab.id);
+      console.log(`Closed Axiom window (dashboard not open): ${tab.url}`);
+    }
   } else if (axiomTraderWindows.length > 1) {
     // Dashboard is open, but multiple Axiom trading windows exist, close all
     for (const tab of axiomTraderWindows) {
       chrome.tabs.remove(tab.id);
       console.log(`Closed duplicate Axiom window: ${tab.url}`);
     }
+  } else if (fmTraderWindows.length > 1) {
+    // Dashboard is open, but multiple Axiom trading windows exist, close all
+    for (const tab of fmTraderWindows) {
+      chrome.tabs.remove(tab.id);
+      console.log(`Closed fmTraderWindows Axiom window: ${tab.url}`);
+    }
   }
-}, 5000); // Check every 5 seconds
+}, 3000); // Check every 5 seconds
 
 
 // Function to refresh the dashboard tab

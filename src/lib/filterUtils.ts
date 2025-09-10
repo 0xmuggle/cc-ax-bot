@@ -214,13 +214,17 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
   if (filters.volumeKMax && volumeUSD > (filters.volumeKMax * 1000)) return false;
 
   // Total Transactions filter
-  if (filters.totalTxMin && surgeData.transactionCount < filters.totalTxMin) return false;
-  if (filters.totalTxMax && surgeData.transactionCount > filters.totalTxMax) return false;
+  const ratio = surgeData.buyCount / surgeData.sellCount;
+  // if (filters.totalTxMin && surgeData.transactionCount < filters.totalTxMin) return false;
+  // if (filters.totalTxMax && surgeData.transactionCount > filters.totalTxMax) return false;
+  if (filters.totalTxMin && ratio < filters.totalTxMin) return false;
+  if (filters.totalTxMax && ratio > filters.totalTxMax) return false;
+  
 
   // Platform filter (comma-separated, AND logic)
   if (filters.platform) {
     const platforms = filters.platform.toLowerCase().split(',').map(p => p.trim());
-    const tokenProtocol = formatProto(surgeData.tokenAddress) + surgeData.protocol.toLowerCase(); // surgeData.protocol.toLowerCase();
+    const tokenProtocol = formatProto(surgeData.tokenAddress);// + surgeData.protocol.toLowerCase(); // surgeData.protocol.toLowerCase();
     if (!platforms.every(p => tokenProtocol.includes(p))) return false;
   }
 

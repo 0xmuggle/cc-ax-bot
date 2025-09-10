@@ -17,7 +17,7 @@ import {
 import { sendToTelegram } from "./telegram";
 import { toast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
-import { calculateSellPrice, formatFilter } from "./utils";
+import { formatFilter } from "./utils";
 
 const MAX_TOKENS = 10000;
 const MAX_HISTORY = 5000;
@@ -50,6 +50,8 @@ interface AppState {
 
   history: HistoryLog[];
   addHistoryLog: (log: HistoryLog) => void;
+  clearHistory: () => void;
+  delHistory: (id: string) => void;
 
   // Main filter state
   filters: FilterState;
@@ -123,6 +125,7 @@ export const useStore = create<AppState>()(
       },
 
       tokens: [],
+
       handleBuy: (tokenAddress) => {
         const { bots, strategies, handleStrategyMatch, tokens, solPrice } = get();
         const matchStrategy = strategies.find((s: any) => s.name === "手动买卖" && s.enabled);
@@ -189,24 +192,28 @@ export const useStore = create<AppState>()(
             amount: buyGain,
             description: `卖出${surgeData.tokenTicker} ${buyGain.toFixed(2)}x 买入:${formatNumber(buyMc)} 当前:${formatNumber(curMc)} 最大:${formatNumber(maxMc)}`
           };
+          const back = (afterBuyMaxPrice - surgePrice.currentPriceSol) / afterBuyMaxPrice;
           if(onlySell) {
             log.description = "手动" + log.description;
             log.status = 'sell';
-          } else if(buyGain < 0.7) { // 跌70%
-            log.description = "止损" + log.description;
-            log.status = 'sell';
-          } else if(diff > 30 ) { // 超时
-            log.description = "超时" + log.description;
-            log.status = 'sell';
-          } else if(surgePrice.currentPriceSol / afterBuyMaxPrice > 0.5) { // 最大价格回撤 50%
+          } else if(back > 0.26 && buyGain > 1.4){
             log.description = "回撤" + log.description;
             log.status = 'sell';
-          } else if(buyGain > 1.4) {
+          } else if(back > 0.3 && buyGain > 2) {
+            log.description = "回撤" + log.description;
+            log.status = 'sell';
+          } else if(buyGain < 0.5) { // 跌50%
+            log.description = "止损" + log.description;
+            log.status = 'sell';
+          } else if(diff > 20) { // 超时
+            log.description = "超时" + log.description;
+            log.status = 'sell';
+          } else if(buyGain > 4) {
             log.description = "止盈" + log.description;
             log.status = 'sell';
           }
-          get().addHistoryLog(log);
           if (log.status === 'sell') {
+            get().addHistoryLog(log);
             const [_, command = ""] = bot.name.split("-");
             toast({
               title: "🎉卖出",
@@ -441,11 +448,11 @@ export const useStore = create<AppState>()(
           strategyName: matchStrategy.name,
           status: 'buy',
         };
-        if(mc < 12_000) {
-          log.description = `命中策略【${matchStrategy.name}】未买入 买入市值(${formatNumber(mc)})低于12K`;
+        if(mc < 12_200) {
+          log.description = `命中策略【${matchStrategy.name}】未买入 买入市值(${formatNumber(mc)})低于12.2K`;
           log.status = 'no';
-        } else if(buyMc * 1.32 < mc) {
-          log.description = `命中策略【${matchStrategy.name}】未买入 买入市值(${formatNumber(mc)})大于预估市值${formatNumber(buyMc*1.32)}`;
+        } else if(buyMc * 1.2 < mc) {
+          log.description = `命中策略【${matchStrategy.name}】未买入 买入市值(${formatNumber(mc)})大于预估市值${formatNumber(buyMc*1.2)}`;
           log.status = 'no';
         } else if(maxMc / mc > 1.81) { // 从最高点回落的不买
           log.description = `命中策略【${matchStrategy.name}】未买入 最大市值${formatNumber(maxMc)}大于买入市值(${formatNumber(mc)}) ${(maxMc / mc).toFixed(2)}x`
@@ -459,7 +466,8 @@ export const useStore = create<AppState>()(
           });
           return false;
         }
-        log.description = `命中策略【${matchStrategy.name}】买入${surgeData.tokenTicker} ${matchStrategy.amount}SOL`;
+        log.description = `命中策略【${matchStrategy.name}】买入${surgeData.tokenTicker} ${matchStrategy.amount}SOL 买入市值(${formatNumber(mc)})`;
+        get().addHistoryLog(log);
         toast({
           title: "🎉买入",
           description: log.description,
@@ -469,11 +477,7 @@ export const useStore = create<AppState>()(
           `${surgeData.tokenAddress}--ON--${((buyMc * 1.15) /1000).toFixed(2)}--${command}buy--${matchStrategy.amount}`,
           bot.apiKey,
           bot.chatId
-        ).then(() => {
-          get().addHistoryLog(log);
-        }).catch((error) => {
-          console.error(`Failed to send Telegram notification for ${surgeData.tokenTicker}:`,error);
-        })
+        );
         return true;
       },
 
@@ -510,6 +514,12 @@ export const useStore = create<AppState>()(
           history.pop();
         }
         set({ history });
+      },
+      clearHistory: () => {
+        set({ history: [] });
+      },
+      delHistory: (id) => {
+        set({ history: [...get().history].filter(item => item.id !== id) });
       },
 
       filters: initialFilterState,
