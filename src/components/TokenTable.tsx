@@ -155,13 +155,13 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
                       <span className="w-[80px] text-purple-600">
                         5m:{formatNumber(moreInfo.priceAt5mMc)}
                       </span>
-                      <span className="hidden w-[80px] text-pink-600">
+                      <span className="w-[80px] text-pink-600">
                         10m:{formatNumber(moreInfo.priceAt10mMc)}
                       </span>
-                      <span className="hidden w-[80px] text-teal-700">
+                      <span className="w-[80px] text-teal-700">
                         15m:{formatNumber(moreInfo.priceAt15mMc)}
                       </span>
-                      <span className="hidden w-[80px] text-fuchsia-700">
+                      <span className="w-[80px] text-fuchsia-700">
                         30m:{formatNumber(moreInfo.priceAt30mMc)}
                       </span>
                     </div>

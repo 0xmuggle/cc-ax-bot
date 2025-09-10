@@ -49,6 +49,7 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
     (event: MessageEvent<AxiomMessage>) => {
       // IMPORTANT: Check the origin for security if you deploy this publicly!
       // if (event.origin !== 'https://axiom.trade') return;
+      
       if(event.data.type === 'FROM_FM_EXTENSION') {
         addSingal(event.data.payload);
         return;
@@ -59,6 +60,7 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
       }
       
       const { payload } = event.data;
+     
       if (!payload || !payload.room) {
         return;
       }

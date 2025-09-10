@@ -11,7 +11,7 @@
   "host_permissions": [
     "https://1d2e5exq7jjmtcbchnvf.vercel.app/*",
     "http://*:3000/*",
-    "https://axiom.trade/*",
+    "https://axiom.trade/discover",
     "https://chain.fm/*"
   ],
   "background": {

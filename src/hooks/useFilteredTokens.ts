@@ -15,8 +15,8 @@ export const useFilteredTokens = () => {
       if(filtered) {
         // Calculate priceChange (涨幅) as multiplier
         const info = calculateMore(token, filters, solPrice);
-        const { surgeData, maxPrice } = token;
-        const priceChange = (maxPrice / surgeData.surgedPrice);
+        const { surgeData, surgePrice } = token;
+        const priceChange = (surgePrice.maxSurgedPrice / surgeData.surgedPrice);
         filtereds.push({
           ...token,
           surgeData: {

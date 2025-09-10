@@ -56,7 +56,7 @@ export const parseRangeInput = (
   multiplier: number = 1
 ): [number | undefined, number | undefined] => {
   if (!value) return [undefined, undefined];
-  const parts = value.split(",").map((p) => p.trim());
+  const parts = String(value).split(",").map((p) => p.trim());
   if (parts.length === 1 && parts[0]) {
     const num = parseFloat(parts[0]);
     return [undefined, num * multiplier]; // Only min value provided
@@ -93,8 +93,14 @@ export const formatFilter = (formState: any) => {
     volumeKMax: parseRangeInput(formState.volumeK, 1)[1],
     totalTxMin: parseRangeInput(formState.totalTx, 1)[0],
     totalTxMax: parseRangeInput(formState.totalTx, 1)[1],
+    totalTxsMin: parseRangeInput(formState.totaltxs, 1)[0],
+    totalTxsMax: parseRangeInput(formState.totaltxs, 1)[1],
     bundledMin: parseRangeInput(formState.bundled, 1)[0],
     bundledMax: parseRangeInput(formState.bundled, 1)[1],
+    top10Min: parseRangeInput(formState.top10, 1)[0],
+    top10Max: parseRangeInput(formState.top10, 1)[1],
+    devHoldingMin: parseRangeInput(formState.devHolding, 1)[0],
+    devHoldingMax: parseRangeInput(formState.devHolding, 1)[1],
     marketCap1MMin: parseRangeInput(formState.marketCap1M, 1000)[0],
     marketCap1MMax: parseRangeInput(formState.marketCap1M, 1000)[1],
     marketCap2MMin: parseRangeInput(formState.marketCap2M, 1000)[0],

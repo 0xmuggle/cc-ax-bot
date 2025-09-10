@@ -5,13 +5,37 @@ import { useStore } from '@/lib/store';
 import { FilterState } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { checkRangeTime } from '@/lib/filterUtils';
-import { formatFilter, formatRangeOutput, parseRangeInput } from '@/lib/utils';
+import { formatFilter, formatRangeOutput } from '@/lib/utils';
 import { Switch } from './ui/switch';
 
 interface FilterFormProps {
   onSaveStrategy: (currentFilters: FilterState) => void;
 }
-
+const initState = {
+  ticker: '',
+  marketCap: '',
+  marketCap1M: '',
+  marketCap2M: '',
+  marketCap3M: '',
+  marketCap5M: '',
+  marketCap10M: '',
+  marketCap15M: '',
+  marketCap30M: '',
+  highMultiple: 3,
+  priceChange: undefined,
+  singal: undefined,
+  volumeK: '',
+  totalTx: '',
+  totaltxs: '',
+  platform: 'pump',
+  bundled: '45',
+  social: '',
+  top10: '45',
+  devHolding: '10',
+  ranges: '',
+  onlyRise: false,
+  date: new Date().toISOString().split("T")[0]
+}
 const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
   const { filters, setFilters, resetFilters } = useStore();
 
@@ -31,36 +55,16 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
     singal?: number;
     volumeK: string; // Raw string input for range
     totalTx: string; // Raw string input for range
+    totaltxs: string;
     platform?: string;
     bundled: string; // Raw string input for range
     social?: string;
-    top10?: number;
-    devHolding?: number;
+    top10?: string;
+    devHolding?: string;
     ranges?: string;
     onlyRise: boolean;
-  }>({
-    ticker: '',
-    marketCap: '',
-    marketCap1M: '',
-    marketCap2M: '',
-    marketCap3M: '',
-    marketCap5M: '',
-    marketCap10M: '',
-    marketCap15M: '',
-    marketCap30M: '',
-    highMultiple: 3,
-    priceChange: undefined,
-    singal: undefined,
-    volumeK: '',
-    totalTx: '',
-    platform: 'pump',
-    bundled: '45',
-    social: '',
-    top10: 45,
-    devHolding: 10,
-    ranges: '',
-    onlyRise: false,
-  });
+    date?: string;
+  }>({...initState});
 
   // Sync formState with global filters when global filters change (e.g., from strategy load)
   useEffect(() => {
@@ -72,8 +76,6 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
       singal: filters.singal,
       platform: filters.platform || '',
       social: filters.social || '',
-      top10: filters.top10 || undefined,
-      devHolding: filters.devHolding || undefined,
       ranges: filters.ranges || undefined,
       onlyRise: filters.onlyRise || false,
       // Convert range numbers back to string for local input display
@@ -85,8 +87,11 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
       marketCap10M: formatRangeOutput(filters.marketCap10MMin, filters.marketCap10MMax, 1000),
       marketCap15M: formatRangeOutput(filters.marketCap15MMin, filters.marketCap15MMax, 1000),
       marketCap30M: formatRangeOutput(filters.marketCap30MMin, filters.marketCap30MMax, 1000),
+      top10: formatRangeOutput(filters.top10Min, filters.top10Max, 1),
+      devHolding: formatRangeOutput(filters.devHoldingMin, filters.devHoldingMax, 1),
       volumeK: formatRangeOutput(filters.volumeKMin, filters.volumeKMax, 1),
       totalTx: formatRangeOutput(filters.totalTxMin, filters.totalTxMax, 1),
+      totaltxs: formatRangeOutput(filters.totalTxsMin, filters.totalTxsMax, 1),
       bundled: formatRangeOutput(filters.bundledMin, filters.bundledMax, 1),
     }));
   }, [filters]);
@@ -96,36 +101,14 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
   };
 
   const handleSearch = () => {
-    const newFilters: FilterState = formatFilter(formState)
+    const newFilters: FilterState = formatFilter(formState);
     if(formState.ranges && checkRangeTime(formState.ranges) || !formState.ranges) {
       setFilters(newFilters);
     }
   };
   
   const handleReset = () => {
-    setFormState({
-      ranges: '',
-      ticker: '',
-      marketCap: '',
-      marketCap1M: '',
-      marketCap2M: '',
-      marketCap3M: '',
-      marketCap5M: '',
-      marketCap10M: '',
-      marketCap15M: '',
-      marketCap30M: '',
-      highMultiple: 3,
-      priceChange: undefined,
-      singal: undefined,
-      volumeK: '',
-      totalTx: '',
-      platform: 'pump',
-      bundled: '45',
-      social: '',
-      top10: 45,
-      devHolding: 10,
-      onlyRise: false,
-    });
+    setFormState({...initState});
     resetFilters();
   };
 
@@ -146,13 +129,15 @@ const FilterForm: React.FC<FilterFormProps> = ({ onSaveStrategy }) => {
         <InputField className='hidden' label="市值(15M)" placeholder="10 or 10,20" value={formState.marketCap15M} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('marketCap15M', e.target.value)} />
         <InputField className='hidden' label="市值(30M)" placeholder="10 or 10,20" value={formState.marketCap30M} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('marketCap30M', e.target.value)} />
         <InputField label="交易量(K)" placeholder="10 or 10,20" value={formState.volumeK} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('volumeK', e.target.value)} />
-        <InputField label="交易总数" placeholder="10 or 10,20" value={formState.totalTx} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('totalTx', e.target.value)} />
+        <InputField label="买卖比" placeholder="10 or 10,20" value={formState.totalTx} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('totalTx', e.target.value)} />
+        <InputField label="买卖总数" placeholder="10 or 10,20" value={formState.totaltxs} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('totaltxs', e.target.value)} />
         <InputField label="平台" placeholder="pump,bonk" value={formState.platform || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('platform', e.target.value)} />
         <InputField label="捆绑" placeholder="1 or 1,10" value={formState.bundled} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('bundled', e.target.value)} />
-        <InputField label="Dev" type="number" placeholder="10" value={formState.devHolding || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('devHolding', Number(e.target.value))} />
-        <InputField label="Top10" type="number" placeholder="10" value={formState.top10 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('top10', Number(e.target.value))} />
+        <InputField label="Dev" placeholder="10" value={formState.devHolding || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('devHolding', e.target.value)} />
+        <InputField label="Top10" placeholder="10" value={formState.top10 || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('top10', e.target.value)} />
         <InputField label="社交" placeholder="twitter,telegram" value={formState.social || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('social', e.target.value)} />
         <InputField label="时间范围" placeholder="00:30-14:00,14:30-15:00" value={formState.ranges || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('ranges', e.target.value)} />
+        <InputField type="date" label="日期" placeholder="00:30-14:00,14:30-15:00" value={formState.date || ''} onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleLocalInputChange('date', e.target.value)} />
         <div>
           <label className="block text-xs font-medium text-gray-800 mb-1">追涨</label>
           <div className='mt-1 block w-full px-3 py-1 bg-white border border-gray-300 rounded-md shadow-sm text-sm'>

@@ -21,7 +21,6 @@ export const calculateMore = (tokenInfo: Token, filters:FilterState, solPrice: n
     priceAt15M,
     priceAt30M,
     priceAt3M,
-    maxPrice
   }: any = token;
 
   const baseMc = surgeData.surgedPrice * surgeData.supply * solPrice;
@@ -54,7 +53,7 @@ export const calculateMore = (tokenInfo: Token, filters:FilterState, solPrice: n
   if(filters.singal) {
      buyMc = baseMc;
      internalBuyMc = baseMc;
-     pChange = maxPrice * surgeData.supply * solPrice / buyMc;
+     pChange = surgePrice.maxSurgedPrice * surgeData.supply * solPrice / buyMc;
   } else {
     mc = baseMc;
     if(filters.marketCap1MMax) mc = priceAt1mMc;
@@ -63,10 +62,14 @@ export const calculateMore = (tokenInfo: Token, filters:FilterState, solPrice: n
     if(filters.marketCap5MMax) mc = priceAt5mMc;
     if(filters.marketCap10MMax) mc = priceAt10mMc;
     if(filters.marketCap15MMax) mc = priceAt15mMc;
-    if(!internal) internal = 1;
-    internalBuyMc = baseMc * internal;
-    buyMc = Math.max(baseMc * internal, mc || baseMc);
-    pChange = maxPrice * surgeData.supply * solPrice / buyMc;
+    if(internal) {
+      internalBuyMc = baseMc * internal;
+      buyMc = Math.max(baseMc * internal, mc || baseMc);
+    } else {
+      internalBuyMc = mc;
+      buyMc = mc;
+    }
+    pChange = surgePrice.maxSurgedPrice * surgeData.supply * solPrice / buyMc;
   }
 
   return {
@@ -133,7 +136,7 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
   const { surgeData, surgePrice } = token;
 
   // Ticker filter
-  if (filters.ticker && surgeData.tokenTicker.toLowerCase() !== filters.ticker.toLowerCase()) {
+  if (filters.ticker && !filters.ticker.toLowerCase().includes(surgeData.tokenTicker.toLowerCase())) {
     return false;
   }
 
@@ -153,6 +156,8 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
     if (diff < 1) {
       return false;
     }
+  } else if(filters.date) {
+    if(new Date(filters.date).toLocaleString().slice(0, 9) !== new Date(surgeData.detectedAt).toLocaleString().slice(0, 9)) return false;
   }
 
   // Market Cap filter
@@ -193,10 +198,12 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
   if (filters.marketCap30MMax && (mcAt30m > filters.marketCap30MMax)) return false;
 
   // Top 10 Holders filter
-  if (filters.top10 && surgeData.top10HoldersPercent > Number(filters.top10)) return false;
+  if (filters.top10Min && surgeData.top10HoldersPercent < filters.top10Min) return false;
+  if (filters.top10Max && surgeData.top10HoldersPercent > filters.top10Max) return false;
 
   // Dev Holding filter
-  if (filters.devHolding && surgeData.devHoldsPercent > Number(filters.devHolding)) return false;
+  if (filters.devHoldingMin && surgeData.devHoldsPercent < filters.devHoldingMin) return false;
+  if (filters.devHoldingMax && surgeData.devHoldsPercent > filters.devHoldingMax) return false;
 
   // Price Change (涨幅) filter
   // Note: priceChange is calculated in useFilteredTokens, ensure it's available on the token
@@ -204,7 +211,7 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
     const priceChange = surgePrice.currentPriceSol / surgeData.surgedPrice;
     if (filters.priceChange && (priceChange ?? 0) < filters.priceChange) return false;
   } else {
-    const priceChange = token.maxPrice / surgeData.surgedPrice;
+    const priceChange = token.surgePrice.maxSurgedPrice / surgeData.surgedPrice;
     if (filters.priceChange && (priceChange ?? 0) < filters.priceChange) return false;
   }
 
@@ -214,8 +221,15 @@ export const applyFiltersToToken = (token: Token, filters: FilterState, solPrice
   if (filters.volumeKMax && volumeUSD > (filters.volumeKMax * 1000)) return false;
 
   // Total Transactions filter
-  if (filters.totalTxMin && surgeData.transactionCount < filters.totalTxMin) return false;
-  if (filters.totalTxMax && surgeData.transactionCount > filters.totalTxMax) return false;
+  // const liquidityUSD = surgeData.liquiditySol * solPrice;
+  // const ratio = liquidityUSD / surgeData.transactionCount / 1000
+  const ratio = surgeData.buyCount / surgeData.sellCount;
+  if (filters.totalTxMin && ratio < filters.totalTxMin) return false;
+  if (filters.totalTxMax && ratio > filters.totalTxMax) return false;
+
+  if (filters.totalTxsMin && surgeData.transactionCount < filters.totalTxsMin) return false;
+  if (filters.totalTxsMax && surgeData.transactionCount > filters.totalTxsMax) return false;
+  
 
   // Platform filter (comma-separated, AND logic)
   if (filters.platform) {

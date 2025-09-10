@@ -131,12 +131,16 @@ export interface FilterState {
   volumeKMax?: number;
   totalTxMin?: number; // 交易总数
   totalTxMax?: number;
+  totalTxsMin?: number; // 交易总数
+  totalTxsMax?: number;
   platform?: string; // 平台
   bundledMin?: number; // 捆绑
   bundledMax?: number;
   social?: string; // 社交
-  top10?: number;
-  devHolding?: number;
+  top10Min?: number; // 
+  top10Max?: number;
+  devHoldingMin?: number; // 
+  devHoldingMax?: number;
   marketCap1MMin?: number;
   marketCap1MMax?: number;
   marketCap2MMin?: number;
@@ -153,4 +157,5 @@ export interface FilterState {
   marketCap30MMax?: number;
   ranges?: string
   onlyRise: boolean;
+  date?:string;
 }
