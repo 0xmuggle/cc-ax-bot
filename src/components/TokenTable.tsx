@@ -10,9 +10,10 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import TokenHistoryHoverCard from "./TokenHistoryHoverCard";
+import { Button } from "./ui/button";
 
 const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
-  const { solPrice } = useStore();
+  const { solPrice, singalMap, handleBuy, handleSell } = useStore();
 
   return (
     <div className="relative w-full max-h-[90vh] overflow-y-auto border rounded-lg shadow-sm">
@@ -53,7 +54,13 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
               付费
             </th>
             <th scope="col" className="px-2 py-4">
+              信号
+            </th>
+            <th scope="col" className="px-2 py-4">
               买入
+            </th>
+            <th scope="col" className="px-2 py-4">
+              操作
             </th>
             <th scope="col" className="px-2 py-4">
               发现时间
@@ -62,9 +69,14 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
         </thead>
         <tbody>
           {tokens.map((tokenInfo: Token) => {
-            const { surges = [], ...token } = tokenInfo;
-            const { surgeData, buyPrice, isHighMultiple, moreInfo = {} }: any = token;
-            
+            const { surges = [], position, ...token } = tokenInfo;
+            const {
+              surgeData,
+              buyPrice,
+              isHighMultiple,
+              moreInfo = {},
+            }: any = token;
+
             const volumeUSD = surgeData.volumeSol * solPrice;
             const liquidityUSD = surgeData.liquiditySol * solPrice;
             const buySellRatio = (
@@ -104,50 +116,56 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
                   </HoverCard>
                 </td>
                 <td className="px-2 py-1 font-mono">
-                    <div className="space-y-2">
-                      {
-                        moreInfo.buyMc > 0 && <div className="space-x-2 text-gray-500">[
-                          <span className="text-green-500">{moreInfo.pChange.toFixed(2)}x</span>
-                          <span className="text-purple-600">{formatNumber(moreInfo.buyMc)}</span>]
-                        </div>
-                      }
-                      <div className="space-y-2">{
-                          surgeData.priceChange
-                          ? `${surgeData.priceChange.toFixed(2)}x`
-                          : "N/A"}
+                  <div className="space-y-2">
+                    {moreInfo.buyMc > 0 && (
+                      <div className="space-x-2 text-gray-500">
+                        [
+                        <span className="text-green-500">
+                          {moreInfo.pChange.toFixed(2)}x
+                        </span>
+                        <span className="text-purple-600">
+                          {formatNumber(moreInfo.buyMc)}
+                        </span>
+                        ]
                       </div>
+                    )}
+                    <div className="space-y-2">
+                      {surgeData.priceChange
+                        ? `${surgeData.priceChange.toFixed(2)}x`
+                        : "N/A"}
                     </div>
+                  </div>
                 </td>
                 <td className="px-2 py-1 font-mono">
                   <div className="space-y-1">
-                      <div>
-                        {formatNumber(moreInfo.surgedMarketCapUSD)}/
-                        {formatNumber(moreInfo.currentMarketCapUSD)}
-                      </div>
-                      <div className="text-xs flex space-x-3">
-                        <span className="w-[80px] text-orange-600">
-                          1m:{formatNumber(moreInfo.priceAt1mMc)}
-                        </span>
-                        <span className="w-[80px] text-orange-600">
-                          2m:{formatNumber(moreInfo.priceAt2mMc)}
-                        </span>
-                        <span className="w-[80px] text-orange-600">
-                          3m:{formatNumber(moreInfo.priceAt3mMc)}
-                        </span>
-                        <span className="w-[80px] text-purple-600">
-                          5m:{formatNumber(moreInfo.priceAt5mMc)}
-                        </span>
-                        <span className="w-[80px] text-pink-600">
-                          10m:{formatNumber(moreInfo.priceAt10mMc)}
-                        </span>
-                        <span className="w-[80px] text-teal-700">
-                          15m:{formatNumber(moreInfo.priceAt15mMc)}
-                        </span>
-                        <span className="w-[80px] text-fuchsia-700">
-                          30m:{formatNumber(moreInfo.priceAt30mMc)}
-                        </span>
-                      </div>
+                    <div>
+                      {formatNumber(moreInfo.surgedMarketCapUSD)}/
+                      {formatNumber(moreInfo.currentMarketCapUSD)}
                     </div>
+                    <div className="text-xs flex space-x-3">
+                      <span className="w-[80px] text-orange-600">
+                        1m:{formatNumber(moreInfo.priceAt1mMc)}
+                      </span>
+                      <span className="w-[80px] text-orange-600">
+                        2m:{formatNumber(moreInfo.priceAt2mMc)}
+                      </span>
+                      <span className="w-[80px] text-orange-600">
+                        3m:{formatNumber(moreInfo.priceAt3mMc)}
+                      </span>
+                      <span className="w-[80px] text-purple-600">
+                        5m:{formatNumber(moreInfo.priceAt5mMc)}
+                      </span>
+                      <span className="hidden w-[80px] text-pink-600">
+                        10m:{formatNumber(moreInfo.priceAt10mMc)}
+                      </span>
+                      <span className="hidden w-[80px] text-teal-700">
+                        15m:{formatNumber(moreInfo.priceAt15mMc)}
+                      </span>
+                      <span className="hidden w-[80px] text-fuchsia-700">
+                        30m:{formatNumber(moreInfo.priceAt30mMc)}
+                      </span>
+                    </div>
+                  </div>
                 </td>
                 <td className="px-2 py-1 font-mono">
                   {formatNumber(volumeUSD)}
@@ -165,15 +183,31 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
                   {surgeData.top10HoldersPercent?.toFixed(1)}
                 </td>
                 <td className="px-2 py-1 font-mono">
-                  {buySellRatio}({surgeData.transactionCount})({formatNumber(liquidityUSD / surgeData.transactionCount)})
+                  {buySellRatio}({surgeData.transactionCount})(
+                  {formatNumber(liquidityUSD / surgeData.transactionCount)})
                 </td>
-                <td className="px-2 py-1">{formatProto(surgeData.tokenAddress)} / {surgeData.protocol}</td>
+                <td className="px-2 py-1">
+                  {formatProto(surgeData.tokenAddress)} / {surgeData.protocol}
+                </td>
                 <td className="px-2 py-1">
                   {surgeData.dexPaid ? (
                     <span className="text-green-600">是</span>
                   ) : (
                     "否"
                   )}
+                </td>
+                <td className="px-2 py-1">
+                  {(singalMap[surgeData.tokenAddress] || []).map((item) => (
+                    <div
+                      key={item.time}
+                      className="flex whitespace-nowrap space-x-2 text-xs"
+                    >
+                      <span>{item.name.slice(0, 4)}</span>
+                      <span>{item.marketCap}K</span>
+                      <span>{item.amount}SOL</span>
+                      <span>{item.time.slice(5)}</span>
+                    </div>
+                  ))}
                 </td>
                 <td className="px-2 py-1">
                   {buyPrice ? (
@@ -186,6 +220,12 @@ const TokenTable: React.FC<{ tokens: Token[] }> = ({ tokens }) => {
                   ) : (
                     "否"
                   )}
+                </td>
+                <td className="px-2 py-1">
+                  <div className="flex space-x-2">
+                    <Button size="sm" variant="outline" onClick={() => handleBuy(surgeData.tokenAddress)}>买入</Button>
+                    {position > 0 && <Button variant="outline" size="sm" onClick={() => handleSell(surgeData.tokenAddress, true)}>卖出</Button>}
+                  </div>
                 </td>
                 <td className="px-2 py-1 font-mono whitespace-nowrap ">
                   <div className="flex space-x-2 items-center">

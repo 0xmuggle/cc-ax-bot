@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 
 // Define the structure of the message from the content script
 interface AxiomMessage {
-  type: 'FROM_AXIOM_EXTENSION';
+  type: 'FROM_AXIOM_EXTENSION' | 'FROM_FM_EXTENSION';
   payload: any;
 }
 
@@ -22,16 +22,26 @@ const ExtensionContext = createContext<ExtensionContextType | null>(null);
 export function ExtensionProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const { addOrUpdateTokens, setSolPrice } = useStore();
+  const { addOrUpdateTokens, setSolPrice, addSingal } = useStore();
   const axiomTabRef = useRef<Window | null>(null);
+  const fmTabRef = useRef<Window | null>(null);
   const [isAxiomTabOpen, setIsAxiomTabOpen] = useState(false);
   const AXIOM_WINDOW_NAME = 'AXIOM_TRADER_WINDOW';
+  const FM_WINDOW_NAME = 'FM_TRADER_WINDOW';
   const openAxiomTab = useCallback(() => {
+    if (fmTabRef.current && !fmTabRef.current.closed) {
+      return;
+    }
+
     if (axiomTabRef.current && !axiomTabRef.current.closed) {
       return;
     }
     const newTab = window.open('https://axiom.trade/discover', AXIOM_WINDOW_NAME, 'width=40,height=40,popup=yes');
     axiomTabRef.current = newTab;
+
+    const newTab2 = window.open('https://chain.fm/home?b=CJLbo0LmHWN3', FM_WINDOW_NAME, 'width=40,height=40,popup=yes');
+    fmTabRef.current = newTab2;
+
     setIsAxiomTabOpen(true);
   }, []);
 
@@ -39,10 +49,15 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
     (event: MessageEvent<AxiomMessage>) => {
       // IMPORTANT: Check the origin for security if you deploy this publicly!
       // if (event.origin !== 'https://axiom.trade') return;
+      if(event.data.type === 'FROM_FM_EXTENSION') {
+        addSingal(event.data.payload);
+        return;
+      }
 
       if (event.data.type !== 'FROM_AXIOM_EXTENSION') {
         return;
       }
+      
       const { payload } = event.data;
       if (!payload || !payload.room) {
         return;
@@ -80,8 +95,9 @@ export function ExtensionProvider({ children }: { children: React.ReactNode }) {
 
     // Monitor the opened tab to update the UI and auto-reopen
     const interval = setInterval(() => {
-      if (axiomTabRef.current && axiomTabRef.current.closed) {
+      if (fmTabRef.current && fmTabRef.current.closed || axiomTabRef.current && axiomTabRef.current.closed) {
         setIsAxiomTabOpen(false);
+        fmTabRef.current = null;
         axiomTabRef.current = null;
         openAxiomTab(); // Auto-reopen
       }
