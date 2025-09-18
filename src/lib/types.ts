@@ -56,6 +56,15 @@ export interface SurgePrice {
   maxSurgedPrice: number;
 }
 
+export interface SingalItem {
+  name: string;
+  type: string;
+  tokenAddress: string;
+  marketCap: string;
+  time: string
+  amount: number;
+}
+
 export interface Token {
   surgeData: SurgeData;
   surgePrice: SurgePrice;
@@ -64,6 +73,7 @@ export interface Token {
   moreInfo?: any;
   // debug
   maxPrice: number;
+  afterBuyMaxPrice: number;
   priceAt1M?: number;
   priceAt2M?: number;
   priceAt3M?: number;
@@ -105,6 +115,8 @@ export interface HistoryLog {
   marketCapAtTrigger: number;
   estimateAtTrigger: number;
   description: string;
+  amount: number;
+  status: 'buy' | 'sell' | 'no'; 
 }
 
 // Represents the state of the main filter form
